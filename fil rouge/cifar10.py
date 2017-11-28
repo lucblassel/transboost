@@ -37,6 +37,8 @@ import pickle
 import os
 import download
 from dataset import one_hot_encoded
+import class_selector as cs
+import time
 
 ########################################################################
 
@@ -67,7 +69,7 @@ num_classes = 10
 # Various constants used to allocate arrays of the correct size.
 
 # Number of files for the training-set.
-_num_files_train = 1 #_num_files_train = 5
+_num_files_train = 2 #_num_files_train = 5
 
 # Number of images for each batch-file in the training-set.
 _images_per_file = 10000
@@ -76,6 +78,8 @@ _images_per_file = 10000
 # This is used to pre-allocate arrays for efficiency.
 _num_images_train = _num_files_train * _images_per_file
 
+# Real number of images  (initialised at 0, incremented by the load function)
+_real_num = 0
 ########################################################################
 # Private functions for downloading, unpacking and loading data-files.
 
@@ -135,10 +139,10 @@ def _load_data(filename):
     and return the converted images (see above) and the class-number
     for each image.
     """
-
+    global _real_num
     # Load the pickled data-file.
     data = _unpickle(filename)
-
+    data,num = cs.select(data)
     # Get the raw images.
     raw_images = data[b'data']
 
@@ -147,6 +151,9 @@ def _load_data(filename):
 
     # Convert the images.
     images = _convert_images(raw_images)
+
+    #count number of selected images
+    _real_num += num
 
     return images, cls
 
@@ -217,6 +224,10 @@ def load_training_data():
 
         # The begin-index for the next batch is the current end-index.
         begin = end
+
+    # resizes arrays to correct size
+    images = images[:_real_num]
+    cls = cls[:_real_num]
 
     return images, cls, one_hot_encoded(class_numbers=cls, num_classes=num_classes)
 

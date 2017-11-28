@@ -1,3 +1,15 @@
+#ignoring datasets
+train/
+
+#ignoring zip files
+*.7z
+
+#ignoring folder
+test\ alexnet/
+
+# notebooks
+fil\ rouge/*.ipynb
+
 # Various
 sandbox*.py
 
