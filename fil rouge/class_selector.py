@@ -11,7 +11,6 @@ import numpy as np
 root = 'data/CIFAR-10/cifar-10-batches-py/'
 label1 = b'dog' #these must be binary -> don't forget b'name'
 label2 = b'truck'
-filename = 'data_batch_1'
 
 def unpickle(file):
     """deserializes dataset"""
