@@ -2,7 +2,7 @@
 # @Author: Romain
 # @Date:   2017-11-28 10:51:04
 # @Last Modified by:   Romain
-# @Last Modified time: 2017-11-30 23:19:29
+# @Last Modified time: 2017-11-30 23:38:58
 import os
 os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
@@ -186,7 +186,7 @@ print("Processing Inception transfer-values for test-images 3 ...")
 
 images_scaled3 = images_test3 * 255.0
 
-transfer_values_test2 = transfer_values_cache(cache_path=file_path_cache_test3,
+transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
                                              images=images_scaled3,
                                              model=model)
 
@@ -412,7 +412,7 @@ def predict_cls_test3():
 #				RUNNING 						   #										
 ####################################################
 
-optimize(num_iterations=10000)
+optimize(num_iterations=1000)
 
 #############
 #  HELPERS	#										
