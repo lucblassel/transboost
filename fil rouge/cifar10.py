@@ -69,7 +69,7 @@ num_classes = 10
 # Various constants used to allocate arrays of the correct size.
 
 # Number of files for the training-set.
-_num_files_train = 5 
+_num_files_train = 5
 
 # Number of images for each batch-file in the training-set.
 _images_per_file = 10000
@@ -133,7 +133,7 @@ def _convert_images(raw):
     return images
 
 
-def _load_data(filename):
+def _load_data(filename,label1,label2):
     """
     Load a pickled data-file from the CIFAR-10 data-set
     and return the converted images (see above) and the class-number
@@ -142,7 +142,7 @@ def _load_data(filename):
     global _real_num
     # Load the pickled data-file.
     data = _unpickle(filename)
-    data,num = cs.select(data)
+    data,num = cs.select(data,label1,label2)
     # Get the raw images.
     raw_images = data[b'data']
 
@@ -189,7 +189,7 @@ def load_class_names():
     return names
 
 
-def load_training_data():
+def load_training_data(label1,label2):#both labels should be binary -> b'label1',b'label2'
     """
     Load all the training-data for the CIFAR-10 data-set.
 
@@ -208,7 +208,7 @@ def load_training_data():
     # For each data-file.
     for i in range(_num_files_train):
         # Load the images and class-numbers from the data-file.
-        images_batch, cls_batch = _load_data(filename="data_batch_" + str(i + 1))
+        images_batch, cls_batch = _load_data(filename="data_batch_" + str(i + 1),label1,label2)
 
         # Number of images in this batch.
         num_images = len(images_batch)
@@ -232,14 +232,14 @@ def load_training_data():
     return images, cls, one_hot_encoded(class_numbers=cls, num_classes=num_classes)
 
 
-def load_test_data():
+def load_test_data(label1,label2):
     """
     Load all the test-data for the CIFAR-10 data-set.
 
     Returns the images, class-numbers and one-hot encoded class-labels.
     """
 
-    images, cls = _load_data(filename="test_batch")
+    images, cls = _load_data(filename="test_batch",label1,label2)
 
     return images, cls, one_hot_encoded(class_numbers=cls, num_classes=num_classes)
 
