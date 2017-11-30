@@ -9,8 +9,9 @@ import pandas as pd
 import numpy as np
 
 root = 'data/CIFAR-10/cifar-10-batches-py/'
-# label1 = b'dog' #these must be binary -> don't forget b'name'
-# label2 = b'truck'
+label1 = b'dog' #these must be binary -> don't forget b'name'
+label2 = b'truck'
+labels = [label1,label2]
 
 def unpickle(file):
     """deserializes dataset"""
@@ -19,11 +20,13 @@ def unpickle(file):
         dict = pickle.load(fo, encoding='bytes')
     return dict
 
-def select(data,label1,label2):
+def select(data,labels):
     """creates dataframe of images corresponding only to wanted labels"""
     label_names = unpickle(root+'batches.meta')
-
-    wanted_labels = [label_names[b'label_names'].index(label1),label_names[b'label_names'].index(label2)]
+    wanted_labels = []
+    for i in labels:
+        wanted_labels.append(label_names[b'label_names'].index(i))
+    # wanted_labels = [label_names[b'label_names'].index(label1),label_names[b'label_names'].index(label2)]
 
     df_data = pd.DataFrame(data[b'data'])
     df_labels = pd.DataFrame(data[b'labels'])

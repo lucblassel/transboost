@@ -69,11 +69,7 @@ num_classes = 10
 # Various constants used to allocate arrays of the correct size.
 
 # Number of files for the training-set.
-<<<<<<< HEAD
-_num_files_train = 5
-=======
 _num_files_train = 1 #_num_files_train = 5
->>>>>>> ca3b9777750b4d5be995dc9fb0b1efeccf52a2e6
 
 # Number of images for each batch-file in the training-set.
 _images_per_file = 10000
@@ -84,6 +80,9 @@ _num_images_train = _num_files_train * _images_per_file
 
 # Real number of images  (initialised at 0, incremented by the load function)
 _real_num = 0
+########################################################################
+#classes you want to select
+labels = [b'dog',b'truck']
 ########################################################################
 # Private functions for downloading, unpacking and loading data-files.
 
@@ -137,7 +136,7 @@ def _convert_images(raw):
     return images
 
 
-def _load_data(filename,label1,label2):
+def _load_data(filename,labels):
     """
     Load a pickled data-file from the CIFAR-10 data-set
     and return the converted images (see above) and the class-number
@@ -146,7 +145,7 @@ def _load_data(filename,label1,label2):
     global _real_num
     # Load the pickled data-file.
     data = _unpickle(filename)
-    data,num = cs.select(data,label1,label2)
+    data,num = cs.select(data,labels)
     # Get the raw images.
     raw_images = data[b'data']
 
@@ -193,7 +192,7 @@ def load_class_names():
     return names
 
 
-def load_training_data(label1,label2):#both labels should be binary -> b'label1',b'label2'
+def load_training_data(labels):#both labels should be binary -> b'label1',b'label2'
     """
     Load all the training-data for the CIFAR-10 data-set.
 
@@ -212,7 +211,7 @@ def load_training_data(label1,label2):#both labels should be binary -> b'label1'
     # For each data-file.
     for i in range(_num_files_train):
         # Load the images and class-numbers from the data-file.
-        images_batch, cls_batch = _load_data(filename="data_batch_" + str(i + 1),label1,label2)
+        images_batch, cls_batch = _load_data(filename="data_batch_" + str(i + 1),labels=labels)
 
         # Number of images in this batch.
         num_images = len(images_batch)
@@ -236,14 +235,14 @@ def load_training_data(label1,label2):#both labels should be binary -> b'label1'
     return images, cls, one_hot_encoded(class_numbers=cls, num_classes=num_classes)
 
 
-def load_test_data(label1,label2):
+def load_test_data(labels):
     """
     Load all the test-data for the CIFAR-10 data-set.
 
     Returns the images, class-numbers and one-hot encoded class-labels.
     """
 
-    images, cls = _load_data(filename="test_batch",label1,label2)
+    images, cls = _load_data(filename="test_batch",labels=labels)
 
     return images, cls, one_hot_encoded(class_numbers=cls, num_classes=num_classes)
 
