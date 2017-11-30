@@ -2,7 +2,7 @@
 # @Author: Romain
 # @Date:   2017-11-30 15:05:11
 # @Last Modified by:   Romain
-# @Last Modified time: 2017-11-30 16:12:10
+# @Last Modified time: 2017-11-30 17:42:16
 import numpy as np
 def class_binariser(array):
 	"""
@@ -31,9 +31,12 @@ def label_binariser(array):
 			to_return.append([0,1])
 		else:
 			to_return.append([1,0])
-	return to_return
+	return np.array(to_return)
 
 def class_name_binariser(class_names,cls):
+	"""
+	this function selects only the needed class_names
+	"""
 	cls = np.unique(cls)
 	max_index_class = np.max(cls)
 	min_index_class = np.min(cls)
