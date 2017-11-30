@@ -69,7 +69,11 @@ num_classes = 10
 # Various constants used to allocate arrays of the correct size.
 
 # Number of files for the training-set.
+<<<<<<< HEAD
 _num_files_train = 5
+=======
+_num_files_train = 1 #_num_files_train = 5
+>>>>>>> ca3b9777750b4d5be995dc9fb0b1efeccf52a2e6
 
 # Number of images for each batch-file in the training-set.
 _images_per_file = 10000
