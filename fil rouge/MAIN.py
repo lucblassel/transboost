@@ -2,7 +2,7 @@
 # @Author: Romain
 # @Date:   2017-11-28 10:51:04
 # @Last Modified by:   Romain
-# @Last Modified time: 2017-11-30 17:51:56
+# @Last Modified time: 2017-11-30 23:38:58
 import os
 os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
@@ -23,7 +23,8 @@ import prettytensor as pt
 import cifar10
 
 
-from cifar10 import num_classes
+#from cifar10 import num_classes
+num_classes = 2
 
 #####################################################################################
 #####################################################################################
@@ -35,23 +36,22 @@ cifar10.maybe_download_and_extract()
 class_names_load = cifar10.load_class_names()
 class_names_load
 
-images_train, cls_train_load, labels_train_load = cifar10.load_training_data()
-images_test, cls_test_load, labels_test_load = cifar10.load_test_data()
-
-# images_train, cls_train_load, labels_train_load = cifar10.load_training_data(['dog','truck'])
-# images_test, cls_test_load, labels_test_load = cifar10.load_test_data(['dog','truck'])
-# images_test2, cls_test_load2, labels_test_load2 = cifar10.load_test_data(['ship','frog'])
+images_train, cls_train_load, labels_train_load = cifar10.load_training_data([b'dog',b'truck'])
+images_test, cls_test_load, labels_test_load = cifar10.load_test_data([b'dog',b'truck'])
+images_test2, cls_test_load2, labels_test_load2 = cifar10.load_test_data([b'ship',b'frog'])
+images_test3, cls_test_load3, labels_test_load3 = cifar10.load_test_data([b'deer',b'horse'])
 
 
 # binarising classes, labels and class names
 
-cls_train,labels_train = class_binariser(cls_train_load),labels_train_load #label_binariser(labels_train_load)
-cls_test,labels_test = class_binariser(cls_test_load), labels_test_load #label_binariser(labels_test_load)
-#cls_test2,labels_test2 = class_binariser(cls_test_load2),label_binariser(labels_test_load2) # to see if the classifier will work on this other set
+cls_train,labels_train = class_binariser(cls_train_load),label_binariser(labels_train_load)
+cls_test,labels_test = class_binariser(cls_test_load),label_binariser(labels_test_load)
+cls_test2,labels_test2 = class_binariser(cls_test_load2),label_binariser(labels_test_load2) # to see if the classifier will work on this other set
+cls_test3,labels_test3 = class_binariser(cls_test_load3),label_binariser(labels_test_load3)
+
 class_names = class_name_binariser(class_names_load,cls_test_load)
-#class_names2 = class_name_binariser(class_names_load,cls_test_load2)
-
-
+class_names2 = class_name_binariser(class_names_load,cls_test_load2)
+class_names3 = class_name_binariser(class_names_load,cls_test_load3)
 
 print("Size of:")
 print("- Training-set:\t\t{}".format(len(images_train)))
@@ -60,7 +60,10 @@ print("- Test-set:\t\t{}".format(len(images_test)))
 from IPython.display import Image, display
 Image('images/08_transfer_learning_flowchart.png')
 
-def plot_images(images, cls_true, cls_pred=None, smooth=True):
+def plot_images(class_names,images, cls_true, cls_pred=None, smooth=True):
+
+    cls_true = cls_true[0:9]
+    images = images [0:9]
 
     assert len(images) == len(cls_true)
 
@@ -110,15 +113,11 @@ def plot_images(images, cls_true, cls_pred=None, smooth=True):
     # in a single Notebook cell.
     plt.show()
 
-# Get the first images from the test-set.
-images = images_test[0:9]
-
-# Get the true classes for those images.
-cls_true = cls_test[0:9]
 
 # Plot the images and labels using our helper-function above.
-plot_images(images=images, cls_true=cls_true, smooth=False)
-
+plot_images(class_names,images=images_test, cls_true=cls_test, smooth=False)
+plot_images(class_names2,images=images_test2, cls_true=cls_test2, smooth=False)
+plot_images(class_names3,images=images_test3, cls_true=cls_test3, smooth=False)
 #####################################################################################
 #####################################################################################
 #							TRANSFER VALUES CALCULATION								#
@@ -134,8 +133,13 @@ from inception import transfer_values_cache
 file_path_cache_train = os.path.join(cifar10.data_path, 'inception_cifar10_train.pkl')
 file_path_cache_test = os.path.join(cifar10.data_path, 'inception_cifar10_test.pkl')
 file_path_cache_test2 = os.path.join(cifar10.data_path, 'inception_cifar10_test2.pkl')
+file_path_cache_test3 = os.path.join(cifar10.data_path, 'inception_cifar10_test3.pkl')
 
 print("Processing Inception transfer-values for training-images ...")
+
+##############
+# TRAIN SET  #
+##############
 
 # Scale images because Inception needs pixels to be between 0 and 255,
 # while the CIFAR-10 functions return pixels between 0.0 and 1.0
@@ -148,6 +152,9 @@ transfer_values_train = transfer_values_cache(cache_path=file_path_cache_train,
                                               images=images_scaled,
                                               model=model)
 
+##############
+# TEST SET   #
+##############
 
 print("Processing Inception transfer-values for test-images ...")
 
@@ -161,12 +168,26 @@ transfer_values_test = transfer_values_cache(cache_path=file_path_cache_test,
                                              images=images_scaled,
                                              model=model)
 
-# If transfer-values have already been calculated then reload them,
-# otherwise calculate them and save them to a cache-file.
-images_scaled = images_test2 * 255.0
+##############
+# TEST SET 2 #
+##############
+print("Processing Inception transfer-values for test-images 2 ...")
+
+images_scaled2 = images_test2 * 255.0
 
 transfer_values_test2 = transfer_values_cache(cache_path=file_path_cache_test2,
                                              images=images_scaled2,
+                                             model=model)
+
+##############
+# TEST SET 3 #
+##############
+print("Processing Inception transfer-values for test-images 3 ...")
+
+images_scaled3 = images_test3 * 255.0
+
+transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
+                                             images=images_scaled3,
                                              model=model)
 
 #####################################################################################
@@ -231,6 +252,38 @@ plot_scatter(transfer_values_reduced, cls)
 #   t-SNE 	#										
 #############
 
+from sklearn.manifold import TSNE
+pca = PCA(n_components=50)
+transfer_values_50d = pca.fit_transform(transfer_values)
+tsne = TSNE(n_components=2)
+transfer_values_reduced = tsne.fit_transform(transfer_values_50d)
+plot_scatter(transfer_values_reduced, cls)
+
+####################################################
+#               OTHER SET                          #                                        
+####################################################
+
+#############
+#   PCA     #                                       
+#############
+
+pca = PCA(n_components=2)
+transfer_values = transfer_values_test2
+cls = cls_test2
+transfer_values_reduced = pca.fit_transform(transfer_values_test2)
+plot_scatter(transfer_values_reduced, cls)
+
+
+#############
+#   t-SNE   #                                       
+#############
+
+from sklearn.manifold import TSNE
+pca = PCA(n_components=50)
+transfer_values_50d = pca.fit_transform(transfer_values_test2)
+tsne = TSNE(n_components=2)
+transfer_values_reduced = tsne.fit_transform(transfer_values_50d)
+plot_scatter(transfer_values_reduced, cls)
 
 #####################################################################################
 #####################################################################################
@@ -346,6 +399,11 @@ def predict_cls_test2():
     return predict_cls(transfer_values = transfer_values_test2,
                        labels = labels_test2,
                        cls_true = cls_test2)
+
+def predict_cls_test3():
+    return predict_cls(transfer_values = transfer_values_test3,
+                       labels = labels_test3,
+                       cls_true = cls_test3)
 ####################################################
 
 
@@ -354,13 +412,13 @@ def predict_cls_test2():
 #				RUNNING 						   #										
 ####################################################
 
-optimize(num_iterations=10000)
+optimize(num_iterations=1000)
 
 #############
 #  HELPERS	#										
 #############
 
-def plot_example_errors(cls_pred, correct):
+def plot_example_errors(images_set,class_names,cls_true,cls_pred, correct):
     # This function is called from print_test_accuracy() below.
 
     # cls_pred is an array of the predicted class-number for
@@ -374,18 +432,18 @@ def plot_example_errors(cls_pred, correct):
     
     # Get the images from the test-set that have been
     # incorrectly classified.
-    images = images_test[incorrect]
+    images = images_set[incorrect]
     
     # Get the predicted classes for those images.
     cls_pred = cls_pred[incorrect]
 
     # Get the true classes for those images.
-    cls_true = cls_test[incorrect]
+    cls_true = cls_true[incorrect]
 
     n = min(9, len(images))
     
     # Plot the first n images.
-    plot_images(images=images[0:n],
+    plot_images(class_names,images=images[0:n],
                 cls_true=cls_true[0:n],
                 cls_pred=cls_pred[0:n])
 
@@ -393,14 +451,14 @@ def plot_example_errors(cls_pred, correct):
 # Import a function from sklearn to calculate the confusion-matrix.
 from sklearn.metrics import confusion_matrix
 
-def plot_confusion_matrix(cls_pred):
+def plot_confusion_matrix(class_names,cls_pred,cls_true):
     # This is called from print_test_accuracy() below.
 
     # cls_pred is an array of the predicted class-number for
     # all images in the test-set.
 
     # Get the confusion matrix using sklearn.
-    cm = confusion_matrix(y_true=cls_test,  # True class for test-set.
+    cm = confusion_matrix(y_true=cls_true,  # True class for test-set.
                           y_pred=cls_pred)  # Predicted class.
 
     # Print the confusion matrix as text.
@@ -450,6 +508,8 @@ def predict_cls(transfer_values, labels, cls_true):
     # Create a boolean array whether each image is correctly classified.
     correct = (cls_true == cls_pred)
 
+    return correct, cls_pred
+
 def classification_accuracy(correct):
     # When averaging a boolean array, False means 0 and True means 1.
     # So we are calculating: number of True / len(correct) which is
@@ -459,13 +519,12 @@ def classification_accuracy(correct):
     # and the number of correct classifications.
     return correct.mean(), correct.sum()
 
-def print_test_accuracy(show_example_errors=False,
-                        show_confusion_matrix=False,pred_func_name):
+def print_test_accuracy(images,pred_fun,cls_test,class_names,show_example_errors=False,show_confusion_matrix=False):
 
     # For all the images in the test-set,
     # calculate the predicted classes and whether they are correct.
-    correct, cls_pred = locals()[pred_func_name]()
-    
+    #correct, cls_pred = locals()[pred_func_name]()
+    correct, cls_pred = pred_fun()
     # Classification accuracy and the number of correct classifications.
     acc, num_correct = classification_accuracy(correct)
     
@@ -479,12 +538,12 @@ def print_test_accuracy(show_example_errors=False,
     # Plot some examples of mis-classifications, if desired.
     if show_example_errors:
         print("Example errors:")
-        plot_example_errors(cls_pred=cls_pred, correct=correct)
+        plot_example_errors(images,class_names,cls_true=cls_test,cls_pred=cls_pred, correct=correct)
 
     # Plot the confusion matrix, if desired.
     if show_confusion_matrix:
         print("Confusion Matrix:")
-        plot_confusion_matrix(cls_pred=cls_pred)
+        plot_confusion_matrix(class_names=class_names,cls_pred=cls_pred,cls_true=cls_test)
 
 #####################################################################################
 #####################################################################################
@@ -493,9 +552,12 @@ def print_test_accuracy(show_example_errors=False,
 #####################################################################################
 
 # ORIGINAL TEST SET
-print_test_accuracy(show_example_errors=True,
-                    show_confusion_matrix=True,"predict_cls_test")
+print_test_accuracy(images_test, predict_cls_test,cls_test,class_names,show_example_errors=True,
+                    show_confusion_matrix=True)
 
 # OTHER CLASSES TEST SET
-print_test_accuracy(show_example_errors=True,
-                    show_confusion_matrix=True,"predict_cls_test2")
+print_test_accuracy(images_test2,predict_cls_test2,cls_test2,class_names2,show_example_errors=True,
+                    show_confusion_matrix=True)
+
+print_test_accuracy(images_test3,predict_cls_test3,cls_test3,class_names3,show_example_errors=True,
+                    show_confusion_matrix=True)
