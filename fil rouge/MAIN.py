@@ -104,11 +104,11 @@ def plot_images(class_names,images, cls_true, cls_pred=None, smooth=True):
 
             # Show the classes as the label on the x-axis.
             ax.set_xlabel(xlabel)
-        
+
         # Remove ticks from the plot.
         ax.set_xticks([])
         ax.set_yticks([])
-    
+
     # Ensure the plot is shown correctly with multiple plots
     # in a single Notebook cell.
     plt.show()
@@ -174,8 +174,7 @@ transfer_values_test = transfer_values_cache(cache_path=file_path_cache_test,
 ##############
 # TEST SET 2 #
 ##############
-print("Processing Inception transfer-values for test-images 2 ...")
-
+print("Processing Inception
 images_scaled2 = images_test2 * 255.0
 
 transfer_values_test2 = transfer_values_cache(cache_path=file_path_cache_test2,
@@ -199,8 +198,31 @@ transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
 #####################################################################################
 #####################################################################################
 
+<<<<<<< HEAD
+=======
+def plot_scatter(values, cls):
+    # Create a color-map with a different color for each class.
+    import matplotlib.cm as cm
+    cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
+
+    # Get the color for each sample.
+    colors = cmap[cls]
+
+    # Extract the x- and y-values.
+    x = values[:, 0]
+    y = values[:, 1]
+
+    # Plot it.
+    plt.scatter(x, y, color=colors)
+    plt.show()
+
+####################################################
+#				ORIGINAL SET					   #
+####################################################
+
+>>>>>>> 2e120eafb4b8a63df2dcf1f841184f93ce04ca71
 #############
-#  HELPERS	#										
+#  HELPERS	#
 #############
 
 def plot_scatter(values, cls):
@@ -224,7 +246,7 @@ def plot_scatter(values, cls):
 ####################################################
 
 #############
-#   PCA 	#										
+#   PCA 	#
 #############
 
 from sklearn.decomposition import PCA
@@ -236,7 +258,7 @@ plot_scatter(transfer_values_reduced, cls)
 
 
 #############
-#   t-SNE 	#										
+#   t-SNE 	#
 #############
 
 from sklearn.manifold import TSNE
@@ -247,11 +269,11 @@ transfer_values_reduced = tsne.fit_transform(transfer_values_50d)
 plot_scatter(transfer_values_reduced, cls)
 
 ####################################################
-#               OTHER SET                          #                                        
+#               OTHER SET                          #
 ####################################################
 
 #############
-#   PCA     #                                       
+#   PCA     #
 #############
 
 pca = PCA(n_components=2)
@@ -262,7 +284,7 @@ plot_scatter(transfer_values_reduced, cls)
 
 
 #############
-#   t-SNE   #                                       
+#   t-SNE   #
 #############
 
 from sklearn.manifold import TSNE
@@ -279,7 +301,7 @@ plot_scatter(transfer_values_reduced, cls)
 #####################################################################################
 
 ####################################################
-#				SETTING UP						   #										
+#				SETTING UP						   #
 ####################################################
 
 transfer_len = model.transfer_len
@@ -396,13 +418,13 @@ def predict_cls_test3():
 
 
 ####################################################
-#				RUNNING 						   #										
+#				RUNNING 						   #
 ####################################################
 
 optimize(num_iterations=9000)
 
 #############
-#  HELPERS	#										
+#  HELPERS	#
 #############
 
 def plot_example_errors(images_set,class_names,cls_true,cls_pred, correct):
@@ -416,11 +438,11 @@ def plot_example_errors(images_set,class_names,cls_true,cls_pred, correct):
 
     # Negate the boolean array.
     incorrect = (correct == False)
-    
+
     # Get the images from the test-set that have been
     # incorrectly classified.
     images = images_set[incorrect]
-    
+
     # Get the predicted classes for those images.
     cls_pred = cls_pred[incorrect]
 
@@ -428,7 +450,7 @@ def plot_example_errors(images_set,class_names,cls_true,cls_pred, correct):
     cls_true = cls_true[incorrect]
 
     n = min(9, len(images))
-    
+
     # Plot the first n images.
     plot_images(class_names,images=images[0:n],
                 cls_true=cls_true[0:n],
@@ -491,7 +513,7 @@ def predict_cls(transfer_values, labels, cls_true):
         # Set the start-index for the next batch to the
         # end-index of the current batch.
         i = j
-        
+
     # Create a boolean array whether each image is correctly classified.
     correct = (cls_true == cls_pred)
 
@@ -514,7 +536,7 @@ def print_test_accuracy(images,pred_fun,cls_test,class_names,show_example_errors
     correct, cls_pred = pred_fun()
     # Classification accuracy and the number of correct classifications.
     acc, num_correct = classification_accuracy(correct)
-    
+
     # Number of images being classified.
     num_images = len(correct)
 

@@ -4,11 +4,12 @@ train/
 #ignoring zip files
 *.7z
 
-#ignoring folder
+#ignoring folders
 test\ alexnet/
+fil\ rouge/images/
 
 # notebooks
-fil\ rouge/*.ipynb
+**.ipynb
 
 # Various
 sandbox*.py
