@@ -13,8 +13,6 @@ from scipy.misc import imshow
 import pickle
 import os
 
-import time
-
 file_path = "batches.meta" #file with the labels
 resizeFactor = 5 #to resize cifar10 images
 
@@ -56,9 +54,10 @@ def getLabelIndexes(labels):
             c += 1
     return ind
 
-def load_data(labels,trainCases,testCases,rnd):
+def load_data(labels,trainCases,testCases):
     """
     loads data from cifar10 dataset
+    labels are the classes you want to select from dataset, trainCases and testCases are the number of wanted train and test cases
     """
     names = load_class_names()
     #initialising arrays for better performance
@@ -103,7 +102,7 @@ def main():
     trainnum = 10
     testnum = 10
 
-    load_data(wantedLabels,trainnum,testnum,False)
+    load_data(wantedLabels,trainnum,testnum)
 
 
 if __name__ == "__main__":
