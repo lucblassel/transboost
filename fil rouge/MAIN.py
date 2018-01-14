@@ -2,7 +2,7 @@
 # @Author: Romain
 # @Date:   2017-11-28 10:51:04
 # @Last Modified by:   Romain
-# @Last Modified time: 2017-11-30 23:38:58
+# @Last Modified time: 2017-12-13 15:00:16
 import os
 # os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
@@ -36,7 +36,7 @@ cifar10.maybe_download_and_extract()
 class_names_load = cifar10.load_class_names()
 class_names_load
 
-images_train, cls_train_load, labels_train_load = cifar10.load_training_data([b'dog',b'truck'])
+images_train, cls_train_load, labels_train_load = cifar10.load_training_data([b'deer',b'horse'])
 images_test, cls_test_load, labels_test_load = cifar10.load_test_data([b'dog',b'truck'])
 images_test2, cls_test_load2, labels_test_load2 = cifar10.load_test_data([b'ship',b'frog'])
 images_test3, cls_test_load3, labels_test_load3 = cifar10.load_test_data([b'deer',b'horse'])
@@ -115,6 +115,7 @@ def plot_images(class_names,images, cls_true, cls_pred=None, smooth=True):
 
 
 # Plot the images and labels using our helper-function above.
+plot_images(class_names,images=images_train, cls_true=cls_train, smooth=True)
 plot_images(class_names,images=images_test, cls_true=cls_test, smooth=False)
 plot_images(class_names2,images=images_test2, cls_true=cls_test2, smooth=False)
 plot_images(class_names3,images=images_test3, cls_true=cls_test3, smooth=False)
@@ -151,6 +152,8 @@ images_scaled = images_train * 255.0
 transfer_values_train = transfer_values_cache(cache_path=file_path_cache_train,
                                               images=images_scaled,
                                               model=model)
+
+
 
 ##############
 # TEST SET   #
@@ -194,22 +197,22 @@ transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
 #			GETTING AN IDEA OF THE SEPARABILTY OF CLASSES							#
 #####################################################################################
 #####################################################################################
-#
-# def plot_scatter(values, cls):
-#     # Create a color-map with a different color for each class.
-#     import matplotlib.cm as cm
-#     cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
-#
-#     # Get the color for each sample.
-#     colors = cmap[cls]
-#
-#     # Extract the x- and y-values.
-#     x = values[:, 0]
-#     y = values[:, 1]
-#
-#     # Plot it.
-#     plt.scatter(x, y, color=colors)
-#     plt.show()
+
+def plot_scatter(values, cls):
+    # Create a color-map with a different color for each class.
+    import matplotlib.cm as cm
+    cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
+
+    # Get the color for each sample.
+    colors = cmap[cls]
+
+    # Extract the x- and y-values.
+    x = values[:, 0]
+    y = values[:, 1]
+
+    # Plot it.
+    plt.scatter(x, y, color=colors)
+    plt.show()
 
 ####################################################
 #				ORIGINAL SET					   #
@@ -234,6 +237,10 @@ def plot_scatter(values, cls):
     # Plot it.
     plt.scatter(x, y, color=colors)
     plt.show()
+
+####################################################
+#				ORIGINAL SET					   #
+####################################################
 
 #############
 #   PCA 	#
@@ -411,7 +418,7 @@ def predict_cls_test3():
 #				RUNNING 						   #
 ####################################################
 
-optimize(num_iterations=1000)
+optimize(num_iterations=9000)
 
 #############
 #  HELPERS	#
