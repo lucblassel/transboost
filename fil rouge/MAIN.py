@@ -4,7 +4,7 @@
 # @Last Modified by:   Romain
 # @Last Modified time: 2017-11-30 23:38:58
 import os
-os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
+# os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
@@ -171,7 +171,7 @@ transfer_values_test = transfer_values_cache(cache_path=file_path_cache_test,
 ##############
 # TEST SET 2 #
 ##############
-print("Processing Inception
+print("Processing Inception")
 images_scaled2 = images_test2 * 255.0
 
 transfer_values_test2 = transfer_values_cache(cache_path=file_path_cache_test2,
@@ -194,22 +194,22 @@ transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
 #			GETTING AN IDEA OF THE SEPARABILTY OF CLASSES							#
 #####################################################################################
 #####################################################################################
-
-def plot_scatter(values, cls):
-    # Create a color-map with a different color for each class.
-    import matplotlib.cm as cm
-    cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
-
-    # Get the color for each sample.
-    colors = cmap[cls]
-
-    # Extract the x- and y-values.
-    x = values[:, 0]
-    y = values[:, 1]
-
-    # Plot it.
-    plt.scatter(x, y, color=colors)
-    plt.show()
+#
+# def plot_scatter(values, cls):
+#     # Create a color-map with a different color for each class.
+#     import matplotlib.cm as cm
+#     cmap = cm.rainbow(np.linspace(0.0, 1.0, num_classes))
+#
+#     # Get the color for each sample.
+#     colors = cmap[cls]
+#
+#     # Extract the x- and y-values.
+#     x = values[:, 0]
+#     y = values[:, 1]
+#
+#     # Plot it.
+#     plt.scatter(x, y, color=colors)
+#     plt.show()
 
 ####################################################
 #				ORIGINAL SET					   #
@@ -244,7 +244,7 @@ pca = PCA(n_components=2)
 transfer_values = transfer_values_train
 cls = cls_train
 transfer_values_reduced = pca.fit_transform(transfer_values)
-plot_scatter(transfer_values_reduced, cls)
+plot_scatter(transfer_values_reduced, cls,)
 
 
 #############

@@ -1,6 +1,12 @@
 #ignoring datasets
 train/
 
+#ignoring latex files
+*.nav
+*.out
+*.snm
+*.toc
+
 #ignoring zip files
 *.7z
 
@@ -9,7 +15,7 @@ test\ alexnet/
 fil\ rouge/images/
 
 # notebooks
-**.ipynb
+*.ipynb
 
 # Various
 sandbox*.py
