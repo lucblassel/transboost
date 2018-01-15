@@ -14,13 +14,13 @@ BLASSEL Luc
 import keras
 
 class callbackBoosting(keras.callbacks.Callback):
-    def _init_(self,threshold):
-        super(callbackBoosting)._init_()
+    def __init__(self,threshold):
+        super(callbackBoosting,self).__init__()
         self.threshold = threshold
 
     def on_train_end(self, logs={}):
         print('training ended')
-        retur
+        return
 
     def on_epoch_end(self, epoch, logs={}):
         if logs.get('val_acc') >= self.threshold:
