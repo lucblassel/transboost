@@ -2,7 +2,7 @@
 # @Author: romaingautronapt
 # @Date:   2018-01-15 14:59:20
 # @Last Modified by:   romaingautronapt
-# @Last Modified time: 2018-01-15 17:33:29
+# @Last Modified time: 2018-01-15 17:45:33
 from keras_inception import *
 import numpy as np
 import time
@@ -33,30 +33,29 @@ def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
 	for time in range(times):
 		x_train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,x_train_boost_indexes)
-		print(x_train_boost)
 
 		current_model = first_layers_modified_model_builder(full_model,layer_limit)
 		error = 0
 		while error == 1 or error == 0 :
-			print("while")
 			current_model = first_layers_modified_model_builder(full_model,layer_limit)
 			first_layers_modified_model_trainer(current_model,x_train_boost,y_train_bin,epochs,threshold)
 			error = 1 - current_model.evaluate(x_train, y_train_bin, verbose=1)[1]
-		print(error)
 		alpha = .5*np.log((1-error)/error)
 
 		error_list.append(error)
 		model_list.append(current_model)
 		alpha_list.append(alpha)
 
-		predicted_prob = current_model.predict(x_train_boost)
 		for i in range(train_length):
+			predicted_prob = current_model.predict(x_train_boost)
+			print("index ",np.where(predicted_prob[i] == predicted_prob[i].max())[0][0],"predicted_prob[i] ",predicted_prob[i])
+			print("index ",np.where(y_train_bin[i] == 1)[0][0],"y_train_bin[i] ",y_train_bin[i])
 			if np.where(predicted_prob[i] == predicted_prob[i].max())[0][0] == np.where(y_train_bin[i] == 1)[0][0]:
 				prob[i] = prob[i]*np.exp(-alpha)
 			else:
 				prob[i] = prob[i]*np.exp(alpha)
 		prob = prob / np.sum(prob)
-
+		break
 	return model_list, error_list, alpha_list
 
 def main():
