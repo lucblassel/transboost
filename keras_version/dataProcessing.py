@@ -1,3 +1,11 @@
+# @Author: Luc Blassel <zlanderous>
+# @Date:   2018-01-15T10:26:14+01:00
+# @Email:  luc.blassel@agroparistech.fr
+# @Last modified by:   zlanderous
+# @Last modified time: 2018-01-15T15:53:22+01:00
+
+
+
 """
 2018-01-14T21:49:15.920Z
 -----------------------------------------------
@@ -111,16 +119,17 @@ def loadTestingData(test,labels,testCases):
     return sub_x_test,sub_y_test
 
 def main():
-    wantedLabels = ['dog','truck']
+    trainLabels = ['dog','truck']
+    testLabels = ['dog','truck']
     trainnum = 1000
     testnum = 1000
 
     train, test = loadRawData()
 
-    x_train,y_train = loadTrainingData(train,wantedLabels,trainnum)
-    x_test,y_test = loadTestingData(test,wantedLabels,testnum)
+    x_train,y_train = loadTrainingData(train,trainLabels,trainnum)
+    x_test,y_test = loadTestingData(test,testLabels,testnum)
 
-    print(x_train)
+    print(y_train,y_test)
 
 
 if __name__ == "__main__":
