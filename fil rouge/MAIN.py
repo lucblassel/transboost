@@ -2,7 +2,7 @@
 # @Author: Romain
 # @Date:   2017-11-28 10:51:04
 # @Last Modified by:   Romain
-# @Last Modified time: 2017-12-13 15:00:16
+# @Last Modified time: 2018-01-14 13:31:35
 import os
 os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
@@ -174,7 +174,7 @@ transfer_values_test = transfer_values_cache(cache_path=file_path_cache_test,
 ##############
 # TEST SET 2 #
 ##############
-print("Processing Inception
+print("Processing Inception")
 images_scaled2 = images_test2 * 255.0
 
 transfer_values_test2 = transfer_values_cache(cache_path=file_path_cache_test2,
