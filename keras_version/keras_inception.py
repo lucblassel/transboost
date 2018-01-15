@@ -3,7 +3,7 @@
 # @Date:   2018-01-15T00:21:20+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-15T15:56:59+01:00
+# @Last modified time: 2018-01-15T16:25:57+01:00
 
 Romain Gautron
 """
@@ -54,8 +54,9 @@ def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
 # BUILDING MODEL FOR TWO CLASSES    #
 #####################################
 
-def full_model_builder(originalSize=None,resizeFactor=None,**kwargs):
-    """ this function builds a model that outputs binary classes
+def full_model_builder(originalSize,resizeFactor,**kwargs):
+    """
+    this function builds a model that outputs binary classes
     INPUTS :
     - img_width >=139
     - img_height >=139
@@ -89,7 +90,7 @@ def full_model_builder(originalSize=None,resizeFactor=None,**kwargs):
 # TRAINING AND TESTING FULL MODEL    #
 #####################################
 
-def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs=None,**kwargs):
+def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwargs):
     """
     this function's purpose is to train the full model
     INPUTS : the model to train
@@ -104,8 +105,9 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs=None,*
 # TRAINING FIRST LAYERS                                                    #
 ############################################################################
 
-def first_layers_modified_model_builder(model,layerLimit=None,**kwargs):
-    """this function changes a model whose first layers are trainable with reinitialized weights
+def first_layers_modified_model_builder(model,layerLimit,**kwargs):
+    """
+    this function changes a model whose first layers are trainable with reinitialized weights
     INPUTS :
     - model to modifiy
     - layerLimit : limit of the first layer to modify (see layer.name)
@@ -123,7 +125,7 @@ def first_layers_modified_model_builder(model,layerLimit=None,**kwargs):
         layer.trainable = False
     return model_copy
 
-def first_layers_modified_model_trainer(model,x_train,y_train_bin,threshold=None,**kwargs):
+def first_layers_modified_model_trainer(model,x_train,y_train_bin,threshold,**kwargs):
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
@@ -135,7 +137,8 @@ def first_layers_modified_model_trainer(model,x_train,y_train_bin,threshold=None
 ############################################################################
 
 def main():
-    """ this function stands for testing purposes
+    """
+    this function stands for testing purposes
     """
     # trainnum = 1000
     # testnum = 1000
@@ -144,9 +147,9 @@ def main():
     # epochs = 1
     # threshold = .2
     # layer_limit =  10
-    print('reading data')
+    print('getting parameters')
     params = getArgs()
-
+    print('reading data')
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
     print("data loaded")
     full_model = full_model_builder(**params)
