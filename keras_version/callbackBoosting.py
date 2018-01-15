@@ -4,7 +4,7 @@
 # @Date:   2018-01-15T11:30:16+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   lucblassel
-# @Last modified time: 2018-01-15T11:43:36+01:00
+# @Last modified time: 2018-01-15T11:46:08+01:00
 
 BLASSEL Luc
 
@@ -15,7 +15,7 @@ import keras
 
 class callbackBoosting(keras.callbacks.Callback):
     def _init_(self,threshold):
-        super(callbackBoosting)._init_()
+        super(callbackBoosting,self)._init_()
         self.threshold = threshold
 
     def on_train_end(self, logs={}):
