@@ -1,0 +1,11 @@
+{
+  "trainCases" : 1000,
+  "testCases" : 1000,
+  "threshold" : 0.8,
+  "resizeFactor" : 5,
+  "epochs" : 5,
+  "trainLabels" : ["dogs","trucks"],
+  "testLabels" : ["dogs","trucks"],
+  "testLabels2" : ["horse","airplane"],
+  "layerLimit" : 10
+}
