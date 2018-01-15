@@ -23,7 +23,7 @@ So we decided to switch libraries
 We decided to use Keras with TF back-end. It was a lot simpler to modify the network. We used the pre-trained version of Inception-V3 available in Keras, and added a binary output _softmax_ layer.  
 We were also able to freeze layers and reinitialize weights in these to pave the way for boosting.
 
-##TODO
+## TODO
 - Implement boosting algorithm
 - implement execution of script in GCloud environment
 - Test boosting with weak projectors against a single strong projector

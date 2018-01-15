@@ -2,10 +2,11 @@
   "trainNum" : 1000,
   "testNum" : 1000,
   "threshold" : 0.8,
+  "originalSize" : 32,
   "resizeFactor" : 5,
   "epochs" : 5,
-  "trainLabels" : ["dogs","trucks"],
-  "testLabels" : ["dogs","trucks"],
+  "trainLabels" : ["dog","truck"],
+  "testLabels" : ["dog","truck"],
   "testLabels2" : ["horse","airplane"],
   "layerLimit" : 10
 }
