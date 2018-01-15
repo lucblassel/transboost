@@ -1,6 +1,6 @@
 {
-  "trainCases" : 1000,
-  "testCases" : 1000,
+  "trainNum" : 1000,
+  "testNum" : 1000,
   "threshold" : 0.8,
   "resizeFactor" : 5,
   "epochs" : 5,

@@ -1,4 +1,10 @@
 """
+# @Author: Luc Blassel <zlanderous>
+# @Date:   2018-01-15T00:21:20+01:00
+# @Email:  luc.blassel@agroparistech.fr
+# @Last modified by:   zlanderous
+# @Last modified time: 2018-01-15T14:31:14+01:00
+
 Romain Gautron
 """
 from dataProcessing import *
@@ -8,6 +14,19 @@ from keras import optimizers
 from keras.models import Sequential, Model
 from keras.layers import Flatten, Dense
 from keras import backend as k
+import paramGetter as pg
+import sys
+
+if len(sys.argv==0):
+    print("please specify path of config file...")
+    sys.exit()
+
+path = sys.argv[0]
+params = pg.reader(path) #dictionary with relevant parameters
+
+img_width, img_height = 139, 139
+epochs = 50
+
 from callbackBoosting import *
 
 #####################
