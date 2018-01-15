@@ -4,7 +4,7 @@
 # @Last Modified by:   Romain
 # @Last Modified time: 2018-01-14 13:31:35
 import os
-os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
+# os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/fil rouge")
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
@@ -198,8 +198,6 @@ transfer_values_test3 = transfer_values_cache(cache_path=file_path_cache_test3,
 #####################################################################################
 #####################################################################################
 
-<<<<<<< HEAD
-=======
 def plot_scatter(values, cls):
     # Create a color-map with a different color for each class.
     import matplotlib.cm as cm
@@ -220,7 +218,6 @@ def plot_scatter(values, cls):
 #				ORIGINAL SET					   #
 ####################################################
 
->>>>>>> 2e120eafb4b8a63df2dcf1f841184f93ce04ca71
 #############
 #  HELPERS	#
 #############
@@ -242,7 +239,7 @@ def plot_scatter(values, cls):
     plt.show()
 
 ####################################################
-#				ORIGINAL SET					   #										
+#				ORIGINAL SET					   #
 ####################################################
 
 #############
@@ -254,7 +251,7 @@ pca = PCA(n_components=2)
 transfer_values = transfer_values_train
 cls = cls_train
 transfer_values_reduced = pca.fit_transform(transfer_values)
-plot_scatter(transfer_values_reduced, cls)
+plot_scatter(transfer_values_reduced, cls,)
 
 
 #############
