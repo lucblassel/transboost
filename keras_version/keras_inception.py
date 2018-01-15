@@ -1,8 +1,6 @@
 """
 Romain Gautron
 """
-import os
-os.chdir("/Users/Romain/Documents/Cours/APT/IODAA/transboost/keras_version")
 from dataProcessing import *
 from binariser import *
 from keras import applications
@@ -12,75 +10,123 @@ from keras.layers import Flatten, Dense
 from keras import backend as k
 from callbackBoosting import *
 
-trainnum = 1000
-testnum = 1000
-wantedLabels = ['dog','truck']
-img_width, img_height = resizeFactor*32,resizeFactor*32
-epochs = 5
-threshold = .8
-
 #####################
 # LOADING DATA		#
 #####################
 
-raw_train,raw_test = loadRawData()
-x_train,y_train = loadTrainingData(raw_train,wantedLabels,trainnum)
-x_test,y_test = loadTestingData(raw_test,wantedLabels,testnum)
-y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
+def loader(wantedLabels,trainnum,testnum):
+	""" this function loads the datasets from CIFAR 10 with correct output in order to feed inception
+	OUTPUTQ : 32*resizefactor,32*resizefactor"""
+	raw_train,raw_test = loadRawData()
+	x_train,y_train = loadTrainingData(raw_train,wantedLabels,trainnum)
+	x_test,y_test = loadTestingData(raw_test,wantedLabels,testnum)
+	y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
+	return x_train, y_train_bin, x_test, y_test_bin
 
-#####################
-# BUILDING MODEL	#
-#####################
+#####################################
+# BUILDING MODEL FOR TWO CLASSES	#
+#####################################
 
-model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
+def full_model_builder(img_width,img_height):
+	""" this function builds a model that outputs binary classes
+	INPUTS : 
+	- img_width >=139
+	- img_height >=139
+	OUTPUTS :
+	-full model
+	"""
+	model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
-# Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
-for layer in model.layers:
-    layer.trainable = False
+	# Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
+	for layer in model.layers:
+	    layer.trainable = False
 
-#Adding custom Layers
-x = model.output
-x = Flatten()(x)
-x = Dense(1024, activation="relu")(x)
-predictions = Dense(2, activation="softmax")(x)
+	#Adding custom Layers
+	x = model.output
+	x = Flatten()(x)
+	x = Dense(1024, activation="relu")(x)
+	predictions = Dense(2, activation="softmax")(x)
 
-# creating the final model
-model_final = Model(input = model.input, output = predictions)
+	# creating the final model
+	model_final = Model(input = model.input, output = predictions)
 
-# compile the model
-model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0001, momentum=0.9), metrics=["accuracy"])
+	# compile the model
+	model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0001, momentum=0.9), metrics=["accuracy"])
 
-#####################
-# TRAINING MODEL	#
-#####################
+	return model_final
 
-model_final.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1,callbacks = [callbackBoosting(threshold)])
+#####################################
+# TRAINING AND TESTING FULL MODEL	#
+#####################################
 
-#####################
-# TESTING MODEL		#
-#####################
-
-score = model_final.evaluate(x_test, y_test_bin, verbose=1)
-
-print(score)
+def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs):
+	"""
+	this function's purpose is to train the full model
+	INPUTS : the model to train
+	OUPUTS : the model score
+	"""
+	model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1)
+	score = model.evaluate(x_test, y_test_bin, verbose=1)
+	return score
 
 
 ############################################################################
-# TRAINING FIRST LAYERS
+# TRAINING FIRST LAYERS 												   #
 ############################################################################
 
-model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
+def first_layers_modified_model_builder(model,layer_limit):
+	"""this function changes a model whose first layers are trainable with reinitialized weights
+	INPUTS : 
+	- model to modifiy
+	- layer_limit : limit of the first layer to modify (see layer.name)
+	OUTPUTS :
+	- copy of the modified model
+	"""
+	model_copy =  model
+	for layer in model_copy.layers[:layer_limit]:
+	    layer.trainable = True
+	    previous_weights = layer.get_weights()
+	    new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
+	    layer.set_weights(new_weights)
 
-for layer in model.layers[:4]:
-    layer.trainable = True
-    previous_weights = layer.get_weights()
-    new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
-    layer.set_weights(new_weights)
+	for layer in model_copy.layers[layer_limit:]:
+	    layer.trainable = False
+	return model_copy
 
-for layer in model.layers[4:]:
-    layer.trainable = False
+def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,threshold):
+	"""
+	this function trains models from [first_layers_modified_model_builder] function
+	"""
+	model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1,callbacks = [callbackBoosting(threshold)])
 
 
-model_final.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1,callbacks = [callbackBoosting(threshold)])
+############################################################################
+# MAIN 																	   #
+############################################################################
 
+def main():
+	""" this function stands for testing purposes
+	"""
+	trainnum = 1000
+	testnum = 1000
+	wantedLabels = ['dog','truck']
+	img_width, img_height = resizeFactor*32,resizeFactor*32
+	epochs = 1
+	threshold = .2
+	layer_limit =  10
+
+	x_train, y_train_bin, x_test, y_test_bin = loader(wantedLabels,trainnum,testnum)
+	print("data loaded")
+	full_model = full_model_builder(img_width,img_height)
+	print("full model built")
+	score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,epochs)
+	print("modified model trained")
+	print("full model score ",score)
+	modified_model = first_layers_modified_model_builder(full_model,layer_limit)
+	print("modified model built")
+	first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,epochs,threshold)
+	print("modified model trained")
+
+if __name__ == '__main__':
+	main()
 
