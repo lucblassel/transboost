@@ -54,23 +54,26 @@ def getLabelIndexes(labels):
             c += 1
     return ind
 
-def load_data(labels,trainCases,testCases):
+def loadRawData():
     """
-    loads data from cifar10 dataset
-    labels are the classes you want to select from dataset, trainCases and testCases are the number of wanted train and test cases
+    loads default keras CIFAR-10 dataset
+    """
+    train,test = cifar10.load_data()
+    return train,test
+
+def loadTrainingData(train,labels,trainCases):
+    """
+    loads a training set of size trainCases, and of the classes from the labels array
     """
     names = load_class_names()
     #initialising arrays for better performance
     sub_x_train = np.zeros((trainCases,resizeFactor*32,resizeFactor*32,3),dtype=np.int)
     sub_y_train = np.zeros((trainCases),dtype=np.int)
-    sub_x_test = np.zeros((testCases,resizeFactor*32,resizeFactor*32,3),dtype=np.int)
-    sub_y_test = np.zeros((testCases),dtype=np.int)
 
-    # gets int values of wanted labels
+    x_train = train[0]
+    y_train = train[1]
+
     ind = getLabelIndexes(labels)
-
-    #loading existing keras dataset
-    (x_train,y_train),(x_test,y_test) = cifar10.load_data()
 
     c = 0
     for i in range(len(y_train)):
@@ -80,7 +83,21 @@ def load_data(labels,trainCases,testCases):
             c += 1
             if c >= trainCases:
                 break
+    return sub_x_train,sub_y_train
 
+def loadTestingData(test,labels,testCases):
+    """
+    loads a testing set of size testCases, and of classes from the labels arrray
+    """
+    names = load_class_names()
+    #initialising arrays for better performance
+    sub_x_test = np.zeros((testCases,resizeFactor*32,resizeFactor*32,3),dtype=np.int)
+    sub_y_test = np.zeros((testCases),dtype=np.int)
+
+    x_test = test[0]
+    y_test = test[1]
+
+    ind = getLabelIndexes(labels)
 
     c = 0
     for i in range(len(y_test)):
@@ -91,18 +108,19 @@ def load_data(labels,trainCases,testCases):
             if c >= testCases:
                 break
 
-    for i in range(5):
-        print(names[sub_y_train[i]])
-        imshow(sub_x_train[i])
-
-    return sub_x_train, sub_y_train, sub_x_test,sub_y_test
+    return sub_x_test,sub_y_test
 
 def main():
     wantedLabels = ['dog','truck']
-    trainnum = 10
-    testnum = 10
+    trainnum = 1000
+    testnum = 1000
 
-    load_data(wantedLabels,trainnum,testnum)
+    train, test = loadRawData()
+
+    x_train,y_train = loadTrainingData(train,wantedLabels,trainnum)
+    x_test,y_test = loadTestingData(test,wantedLabels,testnum)
+
+    print(x_train)
 
 
 if __name__ == "__main__":
