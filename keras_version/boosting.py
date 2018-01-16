@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # @Author: romaingautronapt
 # @Date:   2018-01-15 14:59:20
-# @Last Modified by:   romaingautronapt
-# @Last Modified time: 2018-01-15 17:45:33
+# @Last modified by:   zlanderous
+# @Last modified time: 2018-01-16T08:04:56+01:00
 from keras_inception import *
 import numpy as np
 import time
@@ -16,8 +16,8 @@ def take(tab,indexes):
 		output[c] = tab[i]
 		c+=1
 	return output
-
-def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
+# def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
+def booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times,**kwargs):
 	train_length = len(x_train)
 	model_list = []
 	error_list = []
@@ -26,7 +26,7 @@ def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
 
 	if train_length==0:
 		raise NameError("length of training set equals 0")
-	
+
 	prob = np.repeat(1/train_length, train_length)
 	indexes = list(range(train_length))
 
@@ -34,10 +34,10 @@ def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
 		x_train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,x_train_boost_indexes)
 
-		current_model = first_layers_modified_model_builder(full_model,layer_limit)
+		current_model = first_layers_modified_model_builder(full_model,layerLimit)
 		error = 0
 		while error == 1 or error == 0 :
-			current_model = first_layers_modified_model_builder(full_model,layer_limit)
+			current_model = first_layers_modified_model_builder(full_model,layerLimit)
 			first_layers_modified_model_trainer(current_model,x_train_boost,y_train_bin,epochs,threshold)
 			error = 1 - current_model.evaluate(x_train, y_train_bin, verbose=1)[1]
 		alpha = .5*np.log((1-error)/error)
@@ -46,8 +46,8 @@ def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
 		model_list.append(current_model)
 		alpha_list.append(alpha)
 
+		predicted_prob = current_model.predict(x_train_boost)
 		for i in range(train_length):
-			predicted_prob = current_model.predict(x_train_boost)
 			print("index ",np.where(predicted_prob[i] == predicted_prob[i].max())[0][0],"predicted_prob[i] ",predicted_prob[i])
 			print("index ",np.where(y_train_bin[i] == 1)[0][0],"y_train_bin[i] ",y_train_bin[i])
 			if np.where(predicted_prob[i] == predicted_prob[i].max())[0][0] == np.where(y_train_bin[i] == 1)[0][0]:
@@ -55,8 +55,39 @@ def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layer_limit):
 			else:
 				prob[i] = prob[i]*np.exp(alpha)
 		prob = prob / np.sum(prob)
-		break
+
 	return model_list, error_list, alpha_list
+
+def prediction_boosting(x,model_list, alpha_list):
+	n_samples = len(x)
+	n_models = len(model_list)
+	results = []
+	predicted_class_list = []
+	for model in model_list:
+		probas = model.predict(x)
+		for proba in probas:
+			predicted_class = np.where(proba == proba.max())[0][0]
+			if predicted_class == 0:
+				predicted_class = -1
+			predicted_class_list.append(predicted_class)
+	predicted_class_list = np.array(predicted_class_list)
+	predicted_class_list.reshape((n_models,n_samples))
+	predicted_class_list = np.tranpose(predicted_class_list)
+	alpha_list = np.array(alpha_list)
+	raw_results = np.dot(predicted_class_list,alpha_list)
+
+	for raw_result in raw_results:
+		if raw_result >=0:
+			results.append([0,1])
+		else:
+			results.append([1,0])
+	return results
+
+def accuracy(y_true,y_pred):
+	bool_res = y_true == y_pred
+	int_res = list(map(int,bool_res))
+	accuracy = sum(int_res)/len(y_true)
+	return accuracy
 
 def main():
 	""" this function stands for testing purposes
@@ -66,10 +97,11 @@ def main():
 	x_train, y_train_bin, x_test, y_test_bin = loader(wantedLabels,trainnum,testnum)
 	img_width,img_height = 160,160
 	full_model = full_model_builder(img_width,img_height)
-	layer_limit = 10
+	layerLimit = 10
 	epochs = 1
 	threshold = .5
-	model_list, error_list, alpha_list = booster(full_model,5,x_train,y_train_bin,epochs,threshold,layer_limit)
+	times = 5
+	model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times)
 	print("model_list ", model_list)
 	print("error_list ", error_list)
 	print("alpha_list ", alpha_list)

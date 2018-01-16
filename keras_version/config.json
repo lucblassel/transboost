@@ -6,7 +6,9 @@
   "resizeFactor" : 5,
   "epochs" : 5,
   "trainLabels" : ["dog","truck"],
+  "trainLabels2" : ["deer","horse"],
   "testLabels" : ["dog","truck"],
-  "testLabels2" : ["horse","airplane"],
-  "layerLimit" : 10
+  "testLabels2" : ["deer","horse"],
+  "layerLimit" : 10,
+  "times" : 5
 }

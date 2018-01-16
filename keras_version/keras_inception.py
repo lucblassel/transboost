@@ -3,7 +3,7 @@
 # @Date:   2018-01-15T00:21:20+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-15T17:52:32+01:00
+# @Last modified time: 2018-01-15T22:07:57+01:00
 
 Romain Gautron
 """
@@ -17,7 +17,9 @@ from keras import backend as k
 from callbackBoosting import *
 import paramGetter as pg
 import sys
+from boosting import *
 import time
+from scipy.misc import imshow
 
 def getArgs():
     """
@@ -30,7 +32,12 @@ def getArgs():
     path = sys.argv[1]
     return pg.reader(path) #dictionary with relevant parameters
 
-
+def show5(set):
+    """
+    shows 5 images from set
+    """
+    for i in range(5):
+        imshow(set[i])
 #####################
 # LOADING DATA        #
 #####################
@@ -125,7 +132,7 @@ def first_layers_modified_model_builder(model,layerLimit,**kwargs):
         layer.trainable = False
     return model_copy
 
-def first_layers_modified_model_trainer(model,x_train,y_train_bin,threshold,**kwargs):
+def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,threshold,**kwargs):
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
@@ -140,27 +147,42 @@ def main():
     """
     this function stands for testing purposes
     """
-    # trainnum = 1000
-    # testnum = 1000
-    # wantedLabels = ['dog','truck']
-    # img_width, img_height = resizeFactor*32,resizeFactor*32
-    # epochs = 1
-    # threshold = .2
-    # layer_limit =  10
+
     print('getting parameters')
     params = getArgs()
     print('reading data')
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
+
+    show5(x_train)
+    show5(x_test)
+
     print("data loaded")
     full_model = full_model_builder(**params)
     print("full model built")
-    score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
-    print("modified model trained")
-    print("full model score ",score)
-    modified_model = first_layers_modified_model_builder(full_model,**params)
-    print("modified model built")
-    first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,**params)
-    print("modified model trained")
 
+    # params["testLabels"] = para
+    # score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
+    # print("modified model trained")
+    # print("full model score ",score)
+    # modified_model = first_layers_modified_model_builder(full_model,**params)
+    # print("modified model built")
+    # first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,**params)
+    # print("modified model trained")
+
+    #switching parameters for boosting
+    pg.switchLabels(params)
+    x_train, y_train_bin, x_test, y_test_bin = loader(**params)
+
+    show5(x_train)
+    show5(x_test)
+
+    time.sleep(30)
+    # Boosting
+    model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,**params)
+    print("model_list ", model_list)
+    print("error_list ", error_list)
+    print("alpha_list ", alpha_list)
+    y_pred = prediction_boosting(x_test,model_list,error_list)
+    print(accuracy(y_test,y_pred))
 if __name__ == '__main__':
     main()
