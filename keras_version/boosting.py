@@ -48,8 +48,6 @@ def booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times,**k
 
 		predicted_prob = current_model.predict(x_train_boost)
 		for i in range(train_length):
-			print("index ",np.where(predicted_prob[i] == predicted_prob[i].max())[0][0],"predicted_prob[i] ",predicted_prob[i])
-			print("index ",np.where(y_train_bin[i] == 1)[0][0],"y_train_bin[i] ",y_train_bin[i])
 			if np.where(predicted_prob[i] == predicted_prob[i].max())[0][0] == np.where(y_train_bin[i] == 1)[0][0]:
 				prob[i] = prob[i]*np.exp(-alpha)
 			else:
@@ -63,16 +61,22 @@ def prediction_boosting(x,model_list, alpha_list):
 	n_models = len(model_list)
 	results = []
 	predicted_class_list = []
+	c = 0
 	for model in model_list:
+		print("beginning prediction for model :",c)
 		probas = model.predict(x)
+		to_append = []
 		for proba in probas:
 			predicted_class = np.where(proba == proba.max())[0][0]
 			if predicted_class == 0:
 				predicted_class = -1
-			predicted_class_list.append(predicted_class)
+			to_append.append(predicted_class)
+		predicted_class_list.append(to_append)
+		print("ending prediction for model :",c)
+		c +=1
 	predicted_class_list = np.array(predicted_class_list)
 	predicted_class_list.reshape((n_models,n_samples))
-	predicted_class_list = np.tranpose(predicted_class_list)
+	predicted_class_list = np.transpose(predicted_class_list)
 	alpha_list = np.array(alpha_list)
 	raw_results = np.dot(predicted_class_list,alpha_list)
 
@@ -84,9 +88,15 @@ def prediction_boosting(x,model_list, alpha_list):
 	return results
 
 def accuracy(y_true,y_pred):
-	bool_res = y_true == y_pred
+	if isinstance(y_true,np.ndarray):
+		y_true = y_true.tolist()
+	if isinstance(y_pred,np.ndarray):
+		y_pred = y_pred.tolist()
+	bool_res = []
+	for i in range(len(y_true)):
+		bool_res.append(y_true[i] == y_pred[i])
 	int_res = list(map(int,bool_res))
-	accuracy = sum(int_res)/len(y_true)
+	accuracy = np.sum(int_res)/len(y_true)
 	return accuracy
 
 def main():

@@ -12,7 +12,7 @@ from binariser import *
 from keras import applications
 from keras import optimizers
 from keras.models import Sequential, Model
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Dropout
 from keras import backend as k
 from callbackBoosting import *
 import paramGetter as pg
@@ -75,20 +75,22 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
-    # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
     for layer in model.layers:
         layer.trainable = False
 
-    #Adding custom Layers
-    x = model.output
-    x = Flatten()(x)
-    x = Dense(1024, activation="relu")(x)
-    predictions = Dense(2, activation="softmax")(x)
+    #Last layer for binary output
+    last_layer = model.output
+    last_layer = Flatten()(last_layer)
+    last_layer = Dense(1024, activation="relu")(last_layer)
+    last_layer = Dropout(0.2)(last_layer)
+    last_layer = Dense(1024, activation="relu")(last_layer)
+    last_layer = Dropout(0.2)(last_layer)
+    predictions = Dense(2, activation="softmax")(last_layer)
 
-    # creating the final model
+    # the final model
     model_final = Model(input = model.input, output = predictions)
 
-    # compile the model
+    # compiling the final models
     model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0001, momentum=0.9), metrics=["accuracy"])
 
     return model_final
@@ -153,17 +155,17 @@ def main():
     print('reading data')
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    show5(x_train)
-    show5(x_test)
+    #show5(x_train)
+    #show5(x_test)
 
     print("data loaded")
     full_model = full_model_builder(**params)
     print("full model built")
 
     # params["testLabels"] = para
-    # score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
-    # print("modified model trained")
-    # print("full model score ",score)
+    score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
+    print("modified model trained")
+    print("full model score ",score)
     # modified_model = first_layers_modified_model_builder(full_model,**params)
     # print("modified model built")
     # first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,**params)
@@ -173,16 +175,18 @@ def main():
     pg.switchLabels(params)
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    show5(x_train)
-    show5(x_test)
+    #show5(x_train)
+    #show5(x_test)
 
-    time.sleep(30)
+    #time.sleep(30)
     # Boosting
     model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,**params)
     print("model_list ", model_list)
     print("error_list ", error_list)
     print("alpha_list ", alpha_list)
     y_pred = prediction_boosting(x_test,model_list,error_list)
-    print(accuracy(y_test,y_pred))
+    print(accuracy(y_test_bin,y_pred))
+
+
 if __name__ == '__main__':
     main()
