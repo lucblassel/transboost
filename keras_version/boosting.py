@@ -13,6 +13,7 @@ from keras import optimizers
 from keras.models import Sequential, Model
 from keras.layers import Flatten, Dense, Dropout
 from keras import backend as k
+from  callbackBoosting import *
 
 #####################
 # LOADING DATA        #
@@ -58,9 +59,9 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     #Adding custom Layers
     x = model.output
-    x = Flatten()(x)
+    # x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
-    # x = Dropout(.2)(x)
+    x = Dropout(.2)(x)
     predictions = Dense(2, activation="softmax")(x)
 
     # creating the final model
