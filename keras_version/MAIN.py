@@ -3,7 +3,7 @@
 # @Date:   2018-01-15T00:21:20+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-15T22:07:57+01:00
+# @Last modified time: 2018-01-17T13:24:32+01:00
 
 Romain Gautron
 """
@@ -170,7 +170,7 @@ def main():
     # print("modified model trained")
 
     #switching parameters for boosting
-    pg.switchLabels(params)
+    pg.switchParams(params)
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
     show5(x_train)
