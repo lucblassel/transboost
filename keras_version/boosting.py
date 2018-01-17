@@ -14,6 +14,7 @@ from keras.models import Sequential, Model
 from keras.layers import Flatten, Dense, Dropout
 from keras import backend as k
 from  callbackBoosting import *
+from keras.callbacks import EarlyStopping
 
 #####################
 # LOADING DATA        #
@@ -53,16 +54,19 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
+    # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
     for layer in model.layers:
         layer.trainable = False
 
     #Adding custom Layers
-	x = model.output
-	x = Flatten()(x)
-	x = Dense (1024,activation = "relu")(x)
-	x = Droupout(.5)(x)
-	predictions = Dense(2,activation="softmax")
-	
+    x = model.output
+    x = Flatten()(x)
+    x = Dense(1024, activation="relu")(x)
+    x = Dropout(.2)(x)
+    x = Dense(1024, activation="relu")(x)
+    x = Dropout(.2)(x)
+    predictions = Dense(2, activation="softmax")(x)
+
     # creating the final model
     model_final = Model(input = model.input, output = predictions)
 
@@ -81,7 +85,9 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwar
     INPUTS : the model to train
     OUPUTS : the model score
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs)
+    earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
+
+    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs, validation_split = .1, callbacks = [earlystop])
     score = model.evaluate(x_test, y_test_bin, verbose=1)
     return score
 
