@@ -7,7 +7,6 @@
 
 Romain Gautron
 """
-from dataProcessing import *
 from binariser import *
 from keras import applications
 from keras import optimizers
