@@ -3,10 +3,16 @@
 # @Date:   2018-01-15 14:59:20
 # @Last modified by:   zlanderous
 # @Last modified time: 2018-01-17T13:38:17+01:00
-from keras_inception import *
+
 import numpy as np
 import time
+from binariser import *
 from dataProcessing import *
+from keras import applications
+from keras import optimizers
+from keras.models import Sequential, Model
+from keras.layers import Flatten, Dense
+from keras import backend as k
 
 #####################
 # LOADING DATA        #

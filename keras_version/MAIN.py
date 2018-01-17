@@ -63,7 +63,7 @@ def main():
     show5(x_train)
     show5(x_test)
 
-    score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
+    #score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
     print("modified model trained")
 
     # print("full model score ",score)
