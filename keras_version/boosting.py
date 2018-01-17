@@ -31,7 +31,8 @@ def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
     # x_test,y_test = loadTestingData(raw_test,teLabels,teNum)
     y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
 
-    return x_train, y_train_bin, x_test, y_test_bin
+    # return x_train, y_train_bin, x_test, y_test_bin
+    return x_train, y_train, x_test, y_test
 
 #####################################
 # BUILDING MODEL FOR TWO CLASSES    #
@@ -59,6 +60,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     x = model.output
     x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
+    x = Dropout(.2)
     predictions = Dense(2, activation="softmax")(x)
 
     # creating the final model
@@ -79,7 +81,7 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwar
     INPUTS : the model to train
     OUPUTS : the model score
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1)
+    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs)
     score = model.evaluate(x_test, y_test_bin, verbose=1)
     return score
 
@@ -112,7 +114,7 @@ def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,thresho
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1,callbacks = [callbackBoosting(threshold)])
+    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,callbacks = [callbackBoosting(threshold)])
 
 
 #######################################################
