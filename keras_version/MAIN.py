@@ -3,7 +3,7 @@
 # @Date:   2018-01-15T00:21:20+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-17T13:38:25+01:00
+# @Last modified time: 2018-01-17T14:05:10+01:00
 
 Romain Gautron
 """
@@ -59,14 +59,14 @@ def main():
     print("data loaded")
     full_model = full_model_builder(**params)
     print("full model built")
-    
-    show5(x_train)
-    show5(x_test)
 
-    #score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
+    # show5(x_train)
+    # show5(x_test)
+
+    score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
     print("modified model trained")
 
-    # print("full model score ",score)
+    print("full model score ",score)
     # modified_model = first_layers_modified_model_builder(full_model,**params)
     # print("modified model built")
     # first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,**params)
@@ -76,8 +76,8 @@ def main():
     pg.switchParams(params)
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    show5(x_train)
-    show5(x_test)
+    # show5(x_train)
+    # show5(x_test)
 
     time.sleep(30)
     # Boosting

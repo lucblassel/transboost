@@ -2,7 +2,7 @@
 # @Author: romaingautronapt
 # @Date:   2018-01-15 14:59:20
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-17T13:38:17+01:00
+# @Last modified time: 2018-01-17T14:05:39+01:00
 
 import numpy as np
 import time
@@ -11,7 +11,7 @@ from dataProcessing import *
 from keras import applications
 from keras import optimizers
 from keras.models import Sequential, Model
-from keras.layers import Flatten, Dense
+from keras.layers import Flatten, Dense, Dropout
 from keras import backend as k
 
 #####################
