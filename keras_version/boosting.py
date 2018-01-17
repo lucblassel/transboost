@@ -69,7 +69,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     model_final = Model(input = model.input, output = predictions)
 
     # compile the model
-    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGB(lr=0.0000001), metrics=["accuracy"])
+    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0000001), metrics=["accuracy"])
 
     return model_final
 
