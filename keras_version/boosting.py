@@ -61,9 +61,9 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     #Adding custom Layers
     x = model.output
     x = Flatten()(x)
-    x = Dense(1024, activation="relu")(x)
+    x = Dense(1024, activation="sigmoid")(x)
     x = Dropout(.2)(x)
-    predictions = Dense(2, activation="linear")(x)
+    predictions = Dense(2, activation="softmax")(x)
 
     # creating the final model
     model_final = Model(input = model.input, output = predictions)
