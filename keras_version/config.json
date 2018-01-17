@@ -1,16 +1,16 @@
 {
-  "trainNum" : 100,
-  "testNum" : 100,
-  "trainNum2" : 100,
-  "testNum2" : 100,
-  "threshold" : 0.3,
+  "trainNum" : 1000,
+  "testNum" : 1000,
+  "trainNum2" : 1000,
+  "testNum2" : 1000,
+  "threshold" : 0.65,
   "originalSize" : 32,
   "resizeFactor" : 5,
-  "epochs" : 1,
+  "epochs" : 25,
   "trainLabels" : ["dog","truck"],
   "trainLabels2" : ["deer","horse"],
   "testLabels" : ["dog","truck"],
   "testLabels2" : ["deer","horse"],
   "layerLimit" : 10,
-  "times" : 1
+  "times" : 20
 }
