@@ -63,9 +63,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
     x = Dropout(.2)(x)
-    x = Dense(1024, activation="relu")(x)
-    x = Dropout(.2)(x)
-    predictions = Dense(2, activation="softmax")(x)
+    predictions = Dense(2, activation="linear")(x)
 
     # creating the final model
     model_final = Model(input = model.input, output = predictions)
