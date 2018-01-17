@@ -63,13 +63,13 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
     x = Dropout(.5)(x)
-    predictions = Dense(2, activation="linear")(x)
+    predictions = Dense(2, activation="relu")(x)
 
     # creating the final model
     model_final = Model(input = model.input, output = predictions)
 
     # compile the model
-    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.00001), metrics=["accuracy"])
+    model_final.compile(loss = "binary_crossentropy", optimizer = optimizers.Adam(lr=0.00001), metrics=["accuracy"])
 
     return model_final
 
@@ -85,7 +85,7 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwar
     """
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs, validation_split = .1, callbacks = [earlystop])
+    model.fit(x = x_train, y = y_train_bin, batch_size = 32, epochs = epochs, validation_split = .1, callbacks = [earlystop])
     score = model.evaluate(x_test, y_test_bin, verbose=1)
     return score
 

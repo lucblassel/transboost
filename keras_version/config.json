@@ -1,6 +1,6 @@
 {
-  "trainNum" : 1000,
-  "testNum" : 1000,
+  "trainNum" : 5000,
+  "testNum" : 5000,
   "trainNum2" : 1000,
   "testNum2" : 1000,
   "threshold" : 0.65,
