@@ -67,7 +67,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     model_final = Model(input = model.input, output = predictions)
 
     # compile the model
-    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0001, momentum=0.9), metrics=["accuracy"])
+    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.Adam(lr=0.00001), metrics=["accuracy"])
 
     return model_final
 
@@ -81,7 +81,7 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwar
     INPUTS : the model to train
     OUPUTS : the model score
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs)
+    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs)
     score = model.evaluate(x_test, y_test_bin, verbose=1)
     return score
 
@@ -114,7 +114,7 @@ def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,thresho
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,callbacks = [callbackBoosting(threshold)])
+    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs,callbacks = [callbackBoosting(threshold)])
 
 
 #######################################################
