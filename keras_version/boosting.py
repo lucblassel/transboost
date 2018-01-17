@@ -2,7 +2,7 @@
 # @Author: romaingautronapt
 # @Date:   2018-01-15 14:59:20
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-17T14:05:39+01:00
+# @Last modified time: 2018-01-17T14:11:57+01:00
 
 import numpy as np
 import time
@@ -31,8 +31,8 @@ def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
     # x_test,y_test = loadTestingData(raw_test,teLabels,teNum)
     y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
 
-    # return x_train, y_train_bin, x_test, y_test_bin
-    return x_train, y_train, x_test, y_test
+    return x_train, y_train_bin, x_test, y_test_bin
+    # return x_train, y_train, x_test, y_test
 
 #####################################
 # BUILDING MODEL FOR TWO CLASSES    #
@@ -60,7 +60,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     x = model.output
     x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
-    x = Dropout(.2)
+    # x = Dropout(.2)(x)
     predictions = Dense(2, activation="softmax")(x)
 
     # creating the final model
