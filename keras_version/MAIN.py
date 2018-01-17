@@ -3,7 +3,7 @@
 # @Date:   2018-01-15T00:21:20+01:00
 # @Email:  luc.blassel@agroparistech.fr
 # @Last modified by:   zlanderous
-# @Last modified time: 2018-01-15T22:07:57+01:00
+# @Last modified time: 2018-01-17T13:24:32+01:00
 
 Romain Gautron
 """
@@ -12,7 +12,7 @@ from binariser import *
 from keras import applications
 from keras import optimizers
 from keras.models import Sequential, Model
-from keras.layers import Flatten, Dense, Dropout
+from keras.layers import Flatten, Dense
 from keras import backend as k
 from callbackBoosting import *
 import paramGetter as pg
@@ -75,6 +75,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
+    # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
     for layer in model.layers:
         layer.trainable = False
 
@@ -87,10 +88,10 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     #last_layer = Dropout(0.2)(last_layer)
     predictions = Dense(2, activation="softmax")(last_layer)
 
-    # the final model
+    # creating the final model
     model_final = Model(input = model.input, output = predictions)
 
-    # compiling the final models
+    # compile the model
     model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.SGD(lr=0.0001, momentum=0.9), metrics=["accuracy"])
 
     return model_final
@@ -105,7 +106,7 @@ def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwar
     INPUTS : the model to train
     OUPUTS : the model score
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1)
+    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs)
     score = model.evaluate(x_test, y_test_bin, verbose=1)
     return score
 
@@ -138,7 +139,7 @@ def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,thresho
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,validation_split = 0.1,callbacks = [callbackBoosting(threshold)])
+    model.fit(x = x_train, y = y_train_bin, batch_size = 10, epochs = epochs,callbacks = [callbackBoosting(threshold)])
 
 
 ############################################################################
@@ -155,38 +156,37 @@ def main():
     print('reading data')
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    #show5(x_train)
-    #show5(x_test)
+
 
     print("data loaded")
     full_model = full_model_builder(**params)
     print("full model built")
+    
+    show5(x_train)
+    show5(x_test)
 
-    # params["testLabels"] = para
     score = full_model_trainer(full_model,x_train,y_train_bin,x_test,y_test_bin,**params)
     print("modified model trained")
-    print("full model score ",score)
+    # print("full model score ",score)
     # modified_model = first_layers_modified_model_builder(full_model,**params)
     # print("modified model built")
     # first_layers_modified_model_trainer(modified_model,x_train,y_train_bin,**params)
     # print("modified model trained")
 
     #switching parameters for boosting
-    pg.switchLabels(params)
+    pg.switchParams(params)
     x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    #show5(x_train)
-    #show5(x_test)
+    show5(x_train)
+    show5(x_test)
 
-    #time.sleep(30)
+    time.sleep(30)
     # Boosting
     model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,**params)
     print("model_list ", model_list)
     print("error_list ", error_list)
     print("alpha_list ", alpha_list)
     y_pred = prediction_boosting(x_test,model_list,error_list)
-    print(accuracy(y_test_bin,y_pred))
-
-
+    print(accuracy(y_test,y_pred))
 if __name__ == '__main__':
     main()

@@ -1,6 +1,8 @@
 {
   "trainNum" : 100,
   "testNum" : 100,
+  "trainNum2" : 100,
+  "testNum2" : 100,
   "threshold" : 0.3,
   "originalSize" : 32,
   "resizeFactor" : 5,
