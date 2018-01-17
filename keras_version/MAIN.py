@@ -73,19 +73,19 @@ def main():
     # print("modified model trained")
 
     #switching parameters for boosting
-    pg.switchParams(params)
-    x_train, y_train_bin, x_test, y_test_bin = loader(**params)
+    # pg.switchParams(params)
+    # x_train, y_train_bin, x_test, y_test_bin = loader(**params)
 
-    # show5(x_train)
-    # show5(x_test)
+    # # show5(x_train)
+    # # show5(x_test)
 
-    time.sleep(30)
-    # Boosting
-    model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,**params)
-    print("model_list ", model_list)
-    print("error_list ", error_list)
-    print("alpha_list ", alpha_list)
-    y_pred = prediction_boosting(x_test,model_list,error_list)
-    print(accuracy(y_test,y_pred))
+    # time.sleep(30)
+    # # Boosting
+    # model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,**params)
+    # print("model_list ", model_list)
+    # print("error_list ", error_list)
+    # print("alpha_list ", alpha_list)
+    # y_pred = prediction_boosting(x_test,model_list,error_list)
+    # print(accuracy(y_test,y_pred))
 if __name__ == '__main__':
     main()

@@ -62,14 +62,14 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     x = model.output
     x = Flatten()(x)
     x = Dense(1024, activation="relu")(x)
-    x = Dropout(.5)(x)
+    x = Dropout(.2)(x)
     predictions = Dense(2, activation="relu")(x)
 
     # creating the final model
     model_final = Model(input = model.input, output = predictions)
 
     # compile the model
-    model_final.compile(loss = "binary_crossentropy", optimizer = optimizers.Adam(lr=0.00001), metrics=["accuracy"])
+    model_final.compile(loss = "categorical_crossentropy", optimizer = optimizers.Adam(lr=0.00001), metrics=["accuracy"])
 
     return model_final
 
