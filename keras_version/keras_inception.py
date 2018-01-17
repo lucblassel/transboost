@@ -83,8 +83,8 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     last_layer = Flatten()(last_layer)
     last_layer = Dense(1024, activation="relu")(last_layer)
     last_layer = Dropout(0.2)(last_layer)
-    last_layer = Dense(1024, activation="relu")(last_layer)
-    last_layer = Dropout(0.2)(last_layer)
+    #last_layer = Dense(1024, activation="relu")(last_layer)
+    #last_layer = Dropout(0.2)(last_layer)
     predictions = Dense(2, activation="softmax")(last_layer)
 
     # the final model
