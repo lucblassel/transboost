@@ -20,6 +20,7 @@ from scipy.misc import imresize
 from scipy.misc import imshow
 import pickle
 import os
+from sklearn.model_selection import train_test_split
 
 file_path = "batches.meta" #file with the labels
 resizeFactor = 5 #to resize cifar10 images
@@ -117,6 +118,13 @@ def loadTestingData(test,labels,testCases):
                 break
 
     return sub_x_test,sub_y_test
+
+def validationSplitter(x,y,proportion,shuffle):
+    """
+    returns x_train,x_val,y_train,y_val
+    if shuffle is true training set is shuffled before splitting
+    """
+    return train_test_split(x,y,proportion,shuffle=shuffle)
 
 def main():
     trainLabels = ['dog','truck']
