@@ -1,17 +1,24 @@
+# @Author: Luc Blassel <zlanderous>
+# @Date:   2018-01-18T22:47:47+01:00
+# @Email:  luc.blassel@agroparistech.fr
+# @Last modified by:   zlanderous
+# @Last modified time: 2018-01-18T23:15:14+01:00
+
+
+
 import download
 import shutil
 import pickle
 import os.path
 import numpy as np
+from scipy.misc import imsave
 
 url = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-path = "CIFAR10/"
+path = "data/CIFAR-10/"
 batchesLoc = "cifar-10-batches-py"
 batches = ["data_batch_1","data_batch_2","data_batch_3","data_batch_4","data_batch_5","test_batch"]
 validation = "data_batch_5"
 test = "test_batch"
-path_to_validation = path + "validation"
-path_to_test = path + "test"
 
 meta = 'batches.meta'
 img_size = 32
@@ -69,7 +76,6 @@ def dirCreator(meta,path):
 
 def batchLoader(batch):
     batchPath = os.path.join(path,batchesLoc,batch)
-    print(batch)
     raw = unpickle(batchPath)
     imagesRaw = raw[b'data']
     classes = raw[b'labels']
@@ -88,12 +94,13 @@ def batchLoader(batch):
 
 def sepSaver(sep,setType,batch):
     labels = getLabels(meta)
-
+    name = 1
     for key in sep:
-        classPath = os.path.join(path,setType,labels[key],batch)
-        f = open(classPath,'wb')
-        pickle.dump(sep[key],f)
-        f.close()
+        for img in sep[key]:
+            classPath = os.path.join(path,setType,labels[key],batch+str(name))
+            imsave(classPath+".png",img)
+            name+=1
+
 
 def downloader(url,path):
     download.maybe_download_and_extract(url,path)
