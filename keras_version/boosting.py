@@ -11,7 +11,7 @@ from dataProcessing import *
 from keras import applications
 from keras import optimizers
 from keras.models import Sequential, Model
-from keras.layers import Flatten, Dense, Dropout
+from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D
 from keras import backend as k
 from  callbackBoosting import *
 from keras.callbacks import EarlyStopping
