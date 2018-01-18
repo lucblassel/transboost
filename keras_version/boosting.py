@@ -15,80 +15,139 @@ from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D
 from keras import backend as k
 from  callbackBoosting import *
 from keras.callbacks import EarlyStopping
+from keras.preprocessing.image import ImageDataGenerator
+from dataLoader import *
 
 #####################
 # LOADING DATA        #
 #####################
 
-def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
-    """
-    this function loads the datasets from CIFAR 10 with correct output in order to feed inception
-    OUTPUT : 32*resizefactor,32*resizefactor
-    """
+# def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
+#     """
+#     this function loads the datasets from CIFAR 10 with correct output in order to feed inception
+#     OUTPUT : 32*resizefactor,32*resizefactor
+#     """
 
-    raw_train,raw_test = loadRawData()
-    x_train,y_train = loadTrainingData(raw_train,labels=trainLabels,trainCases=trainNum)
-    # x_train,y_train = loadTrainingData(raw_train,trLabels,trNum)
-    x_test,y_test = loadTestingData(raw_test,labels=testLabels,testCases=testNum)
-    # x_test,y_test = loadTestingData(raw_test,teLabels,teNum)
-    y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
+#     raw_train,raw_test = loadRawData()
+#     x_train,y_train = loadTrainingData(raw_train,labels=trainLabels,trainCases=trainNum)
+#     # x_train,y_train = loadTrainingData(raw_train,trLabels,trNum)
+#     x_test,y_test = loadTestingData(raw_test,labels=testLabels,testCases=testNum)
+#     # x_test,y_test = loadTestingData(raw_test,teLabels,teNum)
+#     y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
 
-    return x_train, y_train_bin, x_test, y_test_bin
-    # return x_train, y_train, x_test, y_test
+#     return x_train, y_train_bin, x_test, y_test_bin
+
+downloader(url,path)
 
 #####################################
 # BUILDING MODEL FOR TWO CLASSES    #
 #####################################
 
-def full_model_builder(originalSize,resizeFactor,**kwargs):
-    """
-    this function builds a model that outputs binary classes
-    INPUTS :
-    - img_width >=139
-    - img_height >=139
-    OUTPUTS :
-    -full model
-    """
-    img_width = originalSize*resizeFactor
-    img_height = originalSize*resizeFactor
-
-    model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
-
-    # Freeze the layers which you don't want to train.
-    for layer in model.layers:
+def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
+    img_size = originalSize*resizeFactor
+    model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
+    for layer in model.layers :
         layer.trainable = False
+    return model
 
-    #Adding custom Layers
-    x = model.output
-    x = Flatten()(x)
-    x = Dense(1024, activation="relu")(x)
-    x = Dropout(.2)(x)
-    # x = GlobalAveragePooling2D()(x)
-    predictions = Dense(2, activation="softmax")(x)
+def create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio):
+    img_size = originalSize*resizeFactor
 
-    # creating the final model
-    model_final = Model(input = model.input, output = predictions)
+    train_datagen = ImageDataGenerator(rescale=1. / 255,
+                                       rotation_range=transformation_ratio,
+                                       shear_range=transformation_ratio,
+                                       zoom_range=transformation_ratio,
+                                       cval=transformation_ratio,
+                                       horizontal_flip=True,
+                                       vertical_flip=True)
 
-    # compile the model
-    model_final.compile(loss = "binary_crossentropy", optimizer = optimizers.Adam(lr=0.00001), metrics=["accuracy"])
+    validation_datagen = ImageDataGenerator(rescale=1. / 255)
 
-    return model_final
+    test_datagen = ImageDataGenerator(rescale=1. / 255)
+
+    train_generator = train_datagen.flow_from_directory(path_to_train,target_size=(img_size, img_size),
+                                                        batch_size=batch_size,
+                                                        classes = classes,
+                                                        class_mode='categorical')
+
+    validation_generator = validation_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
+                                                                  classes = classes,
+                                                                  batch_size=batch_size,
+                                                                  class_mode='categorical')
+
+    test_generator = test_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
+                                                                  classes = classes,
+                                                                  batch_size=batch_size,
+                                                                  class_mode='categorical')
+
+    return train_generator,validation_generator,test_generator
+
+def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size):
+
+    print('bottleneck_features_train.npy')
+    bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
+    np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
+
+    print('bottleneck_features_val.npy')
+    bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
+    np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
+
+    print('bottleneck_features_test.npy')
+    bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+    np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
+
+def top_layer_builder(lr):
+    train_data = np.load(open('bottleneck_features_train.npy',"rb"))
+    model = Sequential()
+    model.add(Flatten(input_shape=train_data.shape[1:]))
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    return model
+
+def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
+    train_data = np.load(open('bottleneck_features_train.npy',"rb"))
+    train_labels = np.array([0] * int(trainNum / 2) + [1] * int(trainNum / 2))
+
+    validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
+    validation_labels = np.array([0] * int(valNum / 2) + [1] * int(valNum / 2))
+
+    test_data = np.load(open('bottleneck_features_val.npy',"rb"))
+    test_labels = np.array([0] * int(testNum / 2) + [1] * int(testNum/ 2))
+
+    earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
+
+    top_model.fit(train_data, train_labels,
+              epochs=epochs,
+              batch_size=batch_size,
+              validation_data=(validation_data, validation_labels),
+              callbacks = [earlystop])
+
+    print(top_model.evaluate(test_data, test_labels, verbose=1))
+
+    top_model.save_weights(top_model_weights_path)
+
+def full_model_builder(bottom_model,top_model,lr):
+    full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
+    full_model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    return full_model
 
 #####################################
 # TRAINING AND TESTING FULL MODEL    #
 #####################################
 
-def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwargs):
-    """
-    this function's purpose is to train the full model
-    INPUTS : the model to train
-    OUPUTS : the model score
-    """
-    earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
+# def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwargs):
+#     """
+#     this function's purpose is to train the full model
+#     INPUTS : the model to train
+#     OUPUTS : the model score
+#     """
+#     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-    model.fit(x = x_train, y = y_train_bin, batch_size = 32, epochs = epochs, validation_split = .1, callbacks = [earlystop])
-    score = model.evaluate(x_test, y_test_bin, verbose=1)
-    return score
+#     model.fit(x = x_train, y = y_train_bin, batch_size = 32, epochs = epochs, validation_split = .1, callbacks = [earlystop])
+#     score = model.evaluate(x_test, y_test_bin, verbose=1)
+#     return score
 
 
 ############################################################################
@@ -217,21 +276,42 @@ def accuracy(y_true,y_pred):
 	return accuracy
 
 def main():
-	""" this function stands for testing purposes
-	"""
-	wantedLabels=['dog','truck']
-	trainnum,testnum = 100,100
-	x_train, y_train_bin, x_test, y_test_bin = loader(wantedLabels,trainnum,testnum)
-	img_width,img_height = 160,160
-	full_model = full_model_builder(img_width,img_height)
-	layerLimit = 10
-	epochs = 1
-	threshold = .5
-	times = 5
-	model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times)
-	print("model_list ", model_list)
-	print("error_list ", error_list)
-	print("alpha_list ", alpha_list)
+    """ this function stands for testing purposes
+    """
+    classes = ['dog','truck']
+    top_model_weights_path = 'fc_model.h5'
+    batch_size = 5
+    transformation_ratio = .2
+    originalSize = 32
+    resizeFactor = 5
+    path_to_train = path + "train"
+    path_to_validation = path + "validation"
+    path_to_test = path + "test"
+    trainNum = 10
+    valNum = 10
+    testNum = 10
+    top_model_weights_path = 'bottleneck_fc_model.h5'
+    lr = 0.0001
+    epochs = 1
+    bottom_model = bottom_layers_builder(originalSize,resizeFactor)
+    train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
+    save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size)
+    top_model = top_layer_builder(lr)
+    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr)
+    full_model = full_model_builder(bottom_model,top_model,lr)
+    probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+    y_classes = probas.argmax(axis=-1)
+    print(y_classes)
+
+    # full_model = full_model_builder(img_width,img_height)
+    # layerLimit = 10
+    # epochs = 1
+    # threshold = .5
+    # times = 5
+    # model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times)
+    # print("model_list ", model_list)
+    # print("error_list ", error_list)
+    # print("alpha_list ", alpha_list)
 
 if __name__ == '__main__':
 	main()
