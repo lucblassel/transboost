@@ -54,16 +54,16 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
-    # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
+    # Freeze the layers which you don't want to train.
     for layer in model.layers:
         layer.trainable = False
 
     #Adding custom Layers
     x = model.output
-    # x = Flatten()(x)
-    # x = Dense(1024, activation="sigmoid")(x)
-    # x = Dropout(.2)(x)
-    x = GlobalAveragePooling2D()(x)
+    x = Flatten()(x)
+    x = Dense(1024, activation="relu")(x)
+    x = Dropout(.2)(x)
+    # x = GlobalAveragePooling2D()(x)
     predictions = Dense(2, activation="softmax")(x)
 
     # creating the final model
