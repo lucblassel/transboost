@@ -280,19 +280,19 @@ def main():
     """
     classes = ['dog','truck']
     top_model_weights_path = 'fc_model.h5'
-    batch_size = 5
+    batch_size = 32
     transformation_ratio = .2
     originalSize = 32
     resizeFactor = 5
     path_to_train = path + "train"
     path_to_validation = path + "validation"
     path_to_test = path + "test"
-    trainNum = 10
-    valNum = 10
-    testNum = 10
+    trainNum = 1000
+    valNum = 500
+    testNum = 500
     top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
-    epochs = 1
+    epochs = 50
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size)
