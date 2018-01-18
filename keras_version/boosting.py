@@ -108,13 +108,16 @@ def top_layer_builder(lr):
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
-    train_labels = np.array([0] * int(trainNum / 2) + [1] * int(trainNum / 2))
+    #train_labels = np.array([0] * int(trainNum / 2) + [1] * int(trainNum / 2))
+    train_labels = np.array([0]*trainNum)
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
-    validation_labels = np.array([0] * int(valNum / 2) + [1] * int(valNum / 2))
+    #validation_labels = np.array([0] * int(valNum / 2) + [1] * int(valNum / 2))
+    validation_labels = np.array([0] * valNum)
 
     test_data = np.load(open('bottleneck_features_val.npy',"rb"))
-    test_labels = np.array([0] * int(testNum / 2) + [1] * int(testNum/ 2))
+    # test_labels = np.array([0] * int(testNum / 2) + [1] * int(testNum/ 2))
+    test_labels = np.array([0] * testNum)
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
