@@ -60,9 +60,10 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
 
     #Adding custom Layers
     x = model.output
-    x = Flatten()(x)
-    x = Dense(1024, activation="sigmoid")(x)
-    x = Dropout(.2)(x)
+    # x = Flatten()(x)
+    # x = Dense(1024, activation="sigmoid")(x)
+    # x = Dropout(.2)(x)
+    x = GlobalAveragePooling2D()(x)
     predictions = Dense(2, activation="linear")(x)
 
     # creating the final model
