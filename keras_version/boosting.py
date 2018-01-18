@@ -52,7 +52,7 @@ def full_model_builder(originalSize,resizeFactor,**kwargs):
     img_width = originalSize*resizeFactor
     img_height = originalSize*resizeFactor
 
-    model = applications.Xcepetion(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
+    model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_width, img_height, 3))
 
     # Freeze the layers which you don't want to train. Here I am freezing the first 5 layers.
     for layer in model.layers:
