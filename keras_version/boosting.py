@@ -97,28 +97,28 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         print('bottleneck_features_train.npy')
         file1 = Path('bottleneck_features_train.npy')
         if not file1.is_file():
-            bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
+            bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
         print('bottleneck_features_val.npy')
         file2 = Path('bottleneck_features_val.npy')
         if not file2.is_file():
-            bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
+            bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
         print('bottleneck_features_test.npy')
         file3 = Path('bottleneck_features_test.npy')
         if not file3.is_file():
-            bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+            bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
     else :
 
-        bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
+        bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
-        bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
+        bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
-        bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+        bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
 def top_layer_builder(lr,num_of_classes):
