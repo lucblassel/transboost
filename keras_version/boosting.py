@@ -74,17 +74,20 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
     train_generator = train_datagen.flow_from_directory(path_to_train,target_size=(img_size, img_size),
                                                         batch_size=batch_size,
                                                         classes = classes,
-                                                        class_mode='categorical')
+                                                        class_mode='binary',
+                                                        shuffle = False)
 
     validation_generator = validation_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
                                                                   classes = classes,
                                                                   batch_size=batch_size,
-                                                                  class_mode='categorical')
+                                                                  class_mode='binary',
+                                                                  shuffle = False)
 
     test_generator = test_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
                                                                   classes = classes,
                                                                   batch_size=batch_size,
-                                                                  class_mode='categorical')
+                                                                  class_mode='binary',
+                                                                  shuffle = False)
 
     return train_generator,validation_generator,test_generator
 
@@ -304,7 +307,7 @@ def main():
     path_to_train = path + "train"
     path_to_validation = path + "validation"
     path_to_test = path + "test"
-    trainNum = 4096
+    trainNum = 1024
     valNum = 512
     testNum = 512
     top_model_weights_path = 'bottleneck_fc_model.h5'
