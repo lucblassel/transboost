@@ -21,25 +21,6 @@ from pathlib import Path
 from keras.utils.np_utils import to_categorical
 import pandas as pd
 
-#####################
-# LOADING DATA        #
-#####################
-
-# def loader(trainLabels,testLabels,trainNum,testNum,**kwargs):
-#     """
-#     this function loads the datasets from CIFAR 10 with correct output in order to feed inception
-#     OUTPUT : 32*resizefactor,32*resizefactor
-#     """
-
-#     raw_train,raw_test = loadRawData()
-#     x_train,y_train = loadTrainingData(raw_train,labels=trainLabels,trainCases=trainNum)
-#     # x_train,y_train = loadTrainingData(raw_train,trLabels,trNum)
-#     x_test,y_test = loadTestingData(raw_test,labels=testLabels,testCases=testNum)
-#     # x_test,y_test = loadTestingData(raw_test,teLabels,teNum)
-#     y_train_bin,y_test_bin = binarise(y_train),binarise(y_test)
-
-#     return x_train, y_train_bin, x_test, y_test_bin
-
 downloader(url,path)
 
 #####################################
@@ -157,23 +138,10 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
 def full_model_builder(bottom_model,top_model,lr):
     full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
     full_model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    for layers in full_model.layers:
+        layer.trainable = False
     return full_model
 
-#####################################
-# TRAINING AND TESTING FULL MODEL    #
-#####################################
-
-# def full_model_trainer(model,x_train,y_train_bin,x_test,y_test_bin,epochs,**kwargs):
-#     """
-#     this function's purpose is to train the full model
-#     INPUTS : the model to train
-#     OUPUTS : the model score
-#     """
-#     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
-
-#     model.fit(x = x_train, y = y_train_bin, batch_size = 32, epochs = epochs, validation_split = .1, callbacks = [earlystop])
-#     score = model.evaluate(x_test, y_test_bin, verbose=1)
-#     return score
 
 
 ############################################################################
@@ -323,9 +291,12 @@ def main():
     recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
-    ps = pd.Series(test_generator.classes)
-    counts = ps.value_counts()
-    print(counts)
+    pstest = pd.Series(test_generator.classes)
+    counts = pstest.value_counts()
+    print("test classes ",counts)
+    pstrain = pd.Series(train_generator.classes)
+    counts = pstrain.value_counts()
+    print("test classes ",counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
     top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator)
