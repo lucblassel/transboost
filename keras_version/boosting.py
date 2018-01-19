@@ -303,7 +303,7 @@ def accuracy(y_true,y_pred):
 def main():
     """ this function stands for testing purposes
     """
-    classes = ['dog','truck']
+    classes = ['horse','deer']
     num_of_classes = len(classes)
     top_model_weights_path = 'fc_model.h5'
     batch_size = 32
@@ -313,13 +313,13 @@ def main():
     path_to_train = path + "train"
     path_to_validation = path + "validation"
     path_to_test = path + "test"
-    trainNum = 1024
+    trainNum = 4096
     valNum = 512
     testNum = 512
     top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
     epochs = 50
-    recompute = False
+    recompute = True
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     print(train_generator.classes)
