@@ -130,8 +130,8 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
     top_model.fit(train_data, train_labels,
               epochs=epochs,
               batch_size=batch_size,
-              validation_data=(validation_data, validation_labels),
-              callbacks = [earlystop])
+              validation_data=(validation_data, validation_labels))
+              #callbacks = [earlystop])
 
     print(top_model.evaluate(test_data, test_labels, verbose=1))
 
