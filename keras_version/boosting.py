@@ -112,6 +112,8 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Flatten(input_shape=train_data.shape[1:]))
     model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
     #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
     model.compile(optimizer = optimizers.Adam(lr=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
