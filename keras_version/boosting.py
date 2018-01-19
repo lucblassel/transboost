@@ -104,7 +104,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
 
-def top_layer_builder(lr):
+def top_layer_builder(lr,num_of_classes):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     top_layers = Sequential()
     top_layers = Flatten(input_shape=train_data.shape[1:])
@@ -309,7 +309,7 @@ def main():
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size)
-    top_model = top_layer_builder(lr)
+    top_model = top_layer_builder(lr,num_of_classes)
     top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr)
     full_model = full_model_builder(bottom_model,top_model,lr)
     probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
