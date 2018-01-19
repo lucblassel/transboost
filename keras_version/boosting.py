@@ -30,7 +30,7 @@ downloader(url,path)
 def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
     img_size = originalSize*resizeFactor
     #model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
-    model = applications.VGG16(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
+    model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
 
     for layer in model.layers :
         layer.trainable = False
@@ -107,11 +107,11 @@ def top_layer_builder(lr,num_of_classes):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(1024, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
-    model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
-    #model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
+    model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator):
@@ -288,7 +288,7 @@ def main():
     top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
     epochs = 50
-    recompute = True
+    recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     pstest = pd.Series(test_generator.classes[:testNum])
@@ -296,7 +296,7 @@ def main():
     print("test classes ",counts)
     pstrain = pd.Series(train_generator.classes[:trainNum])
     counts = pstrain.value_counts()
-    print("test classes ",counts)
+    print("train classes ",counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
     top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator)
