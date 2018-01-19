@@ -108,7 +108,7 @@ def top_layer_builder(lr,num_of_classes):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(1024, activation='relu'))
+    model.add(Dense(1024, activation='sigmoid'))
     #model.add(Dropout(0.5))
     model.add(Dense(1, activation='softmax'))
     model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
