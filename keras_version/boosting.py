@@ -107,14 +107,13 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
-    model.add(Flatten(input_shape=train_data.shape[1:]))
-    model = Sequential()
     model.add(Conv2D(filters=100, kernel_size=2, input_shape=train_data.shape[1:]))
     model.add(Dropout(0.4))
     model.add(GlobalAveragePooling2D())
     model.add(Dropout(0.3))
-    model.add(Dense(10, activation='softmax'))
+    model.add(Dense(2, activation='softmax'))
     model.summary()
+    model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
