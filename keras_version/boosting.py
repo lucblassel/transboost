@@ -75,19 +75,19 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
                                                         batch_size=batch_size,
                                                         classes = classes,
                                                         class_mode='binary',
-                                                        shuffle = False)
+                                                        shuffle = True)
 
     validation_generator = validation_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
                                                                   classes = classes,
                                                                   batch_size=batch_size,
                                                                   class_mode='binary',
-                                                                  shuffle = False)
+                                                                  shuffle = True)
 
     test_generator = test_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
                                                                   classes = classes,
                                                                   batch_size=batch_size,
                                                                   class_mode='binary',
-                                                                  shuffle = False)
+                                                                  shuffle = True)
 
     return train_generator,validation_generator,test_generator
 
@@ -97,28 +97,28 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         print('bottleneck_features_train.npy')
         file1 = Path('bottleneck_features_train.npy')
         if not file1.is_file():
-            bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
+            bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
             np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
         print('bottleneck_features_val.npy')
         file2 = Path('bottleneck_features_val.npy')
         if not file2.is_file():
-            bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
+            bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
             np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
         print('bottleneck_features_test.npy')
         file3 = Path('bottleneck_features_test.npy')
         if not file3.is_file():
-            bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
+            bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
             np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
     else :
 
-        bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
+        bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
         np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
-        bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
+        bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
         np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
-        bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
+        bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
 def top_layer_builder(lr,num_of_classes):
@@ -132,18 +132,14 @@ def top_layer_builder(lr,num_of_classes):
     #model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
+def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
-    train_labels = np.array([0] * int(trainNum//2) + [1] * int(trainNum//2))
-    #train_labels_binary = to_categorical(train_labels)
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
-    validation_labels = np.array([0] * int(valNum//2) + [1] * int(valNum//2))
-    #validation_labels_binary = to_categorical(train_labels)
 
     test_data = np.load(open('bottleneck_features_val.npy',"rb"))
-    test_labels = np.array([0] * int(testNum//2) + [1] * int(testNum//2))
-    #test_labels_binary = to_categorical(test_labels)
+
+    train_labels,validation_labels,test_labels = train_generator.classes,validation_generator.classes,test_generator.classes
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
@@ -326,12 +322,10 @@ def main():
     recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
-    print(train_generator)
-    print(dir(train_generator))
     print(train_generator.classes)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
-    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr)
+    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator)
     full_model = full_model_builder(bottom_model,top_model,lr)
     probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
     y_classes = probas.argmax(axis=-1)
