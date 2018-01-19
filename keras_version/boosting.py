@@ -108,7 +108,7 @@ def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(256, activation='relu'))
+    model.add(Dense(256, activation='sigmoid'))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='softmax'))
 
