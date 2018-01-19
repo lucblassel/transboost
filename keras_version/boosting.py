@@ -47,7 +47,7 @@ downloader(url,path)
 
 def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
     img_size = originalSize*resizeFactor
-    model = applications.VGG16(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
+    model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
     for layer in model.layers :
         layer.trainable = False
     return model
@@ -108,11 +108,13 @@ def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(256, activation='relu'))
-    model.add(Dropout(0.5))
-    model.add(Dense(1, activation='sigmoid'))
-    model.compile(loss='binary_crossentropy',optimizer=optimizers.SGD(lr=lr, momentum=0.9),metrics=['accuracy'])
-    #model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    model = Sequential()
+    model.add(Conv2D(filters=100, kernel_size=2, input_shape=train_data.shape[1:]))
+    model.add(Dropout(0.4))
+    model.add(GlobalAveragePooling2D())
+    model.add(Dropout(0.3))
+    model.add(Dense(10, activation='softmax'))
+    model.summary()
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
