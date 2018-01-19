@@ -112,7 +112,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
             bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
             np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
-    if recomptue :
+    else :
 
         bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
         np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
