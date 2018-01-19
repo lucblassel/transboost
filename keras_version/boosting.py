@@ -139,9 +139,7 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
 
     test_data = np.load(open('bottleneck_features_val.npy',"rb"))
 
-    train_nb_samples,validation_nb_samples,test_nb_samples = train_generator.nb_samples,validation_generator.nb_samples,test_generator.nb_samples
-
-    train_labels,validation_labels,test_labels = train_generator.classes[:train_nb_samples],validation_generator.classes[:validation_nb_samples],test_generator.classes[:test_nb_samples]
+    train_labels,validation_labels,test_labels = train_generator.classes[:trainNum],validation_generator.classes[:valNum],test_generator.classes[:testNum]
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
