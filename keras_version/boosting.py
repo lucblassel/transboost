@@ -110,8 +110,6 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Flatten(input_shape=train_data.shape[1:]))
     model.add(Dense(1024, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(1024, activation='relu'))
-    model.add(Dropout(0.5))
     model.add(Dense(1, activation='softmax'))
     model.compile(loss = "binary_crossentropy", optimizer ='rmsprop', metrics=["accuracy"])
     return model
