@@ -106,38 +106,37 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 
 def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
-    model = Sequential()
-    model.add(Conv2D(filters=100, kernel_size=2, input_shape=train_data.shape[1:]))
-    model.add(Dropout(0.4))
-    model.add(GlobalAveragePooling2D())
-    model.add(Dropout(0.3))
-    model.add(Dense(1, activation='softmax'))
-    model.summary()
-    model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
-    return model
+    top_layers = Sequential()
+    top_layers = Flatten(input_shape=train_data.shape[1:])
+    top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
+    top_layers = Dropout(0.5)(top_layers)
+    top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
+    top_layers = Dense(num_of_classes, activation="softmax")(top_layers)
+    top_layers.compile(loss = "binary_crossentropy", optimizer = optimizers.SGD(lr=lr, momentum=0.9), metrics=["accuracy"])
+    return top_layers
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     train_labels = np.array([0] * int(trainNum//2) + [1] * int(trainNum//2))
-    train_labels_binary = to_categorical(train_labels)
+    #train_labels_binary = to_categorical(train_labels)
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
     validation_labels = np.array([0] * int(valNum//2) + [1] * int(valNum//2))
-    validation_labels_binary = to_categorical(train_labels)
+    #validation_labels_binary = to_categorical(train_labels)
 
     test_data = np.load(open('bottleneck_features_val.npy',"rb"))
     test_labels = np.array([0] * int(testNum//2) + [1] * int(testNum//2))
-    test_labels_binary = to_categorical(test_labels)
+    #test_labels_binary = to_categorical(test_labels)
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-    top_model.fit(train_data, train_labels_binary,
+    top_model.fit(train_data, train_labels,
               epochs=epochs,
               batch_size=batch_size,
-              validation_data=(validation_data, validation_labels_binary))
+              validation_data=(validation_data, validation_labels))
               #callbacks = [earlystop])
 
-    print(top_model.evaluate(test_data, test_labels_binary, verbose=1))
+    print(top_model.evaluate(test_data, test_labels, verbose=1))
 
     top_model.save_weights(top_model_weights_path)
 
@@ -292,6 +291,7 @@ def main():
     """ this function stands for testing purposes
     """
     classes = ['dog','truck']
+    num_of_classes = len(classes)
     top_model_weights_path = 'fc_model.h5'
     batch_size = 32
     transformation_ratio = .05
