@@ -108,11 +108,11 @@ def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(256, activation='sigmoid'))
+    model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(1, activation='softmax'))
-
-    model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss='binary_crossentropy',optimizer=optimizers.SGD(lr=lr, momentum=0.9),metrics=['accuracy'])
+    #model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
@@ -290,7 +290,7 @@ def main():
     classes = ['dog','truck']
     top_model_weights_path = 'fc_model.h5'
     batch_size = 32
-    transformation_ratio = .2
+    transformation_ratio = .05
     originalSize = 32
     resizeFactor = 5
     path_to_train = path + "train"
