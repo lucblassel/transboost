@@ -105,15 +105,15 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
 
 def top_layer_builder(lr,num_of_classes):
-    train_data = np.load(open('bottleneck_features_train.npy',"rb"))
-    top_layers = Sequential()
-    top_layers = Flatten()
-    top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
-    top_layers = Dropout(0.5)(top_layers)
-    top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
-    top_layers = Dense(num_of_classes, activation="softmax")(top_layers)
-    top_layers.compile(loss = "binary_crossentropy", optimizer = optimizers.SGD(lr=lr, momentum=0.9), metrics=["accuracy"])
-    return top_layers
+    model = Sequential()
+    model.add(Flatten(input_shape=train_data.shape[1:]))
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1024, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(1, activation='sigmoid'))
+    model.compile(loss = "binary_crossentropy", optimizer ='rmsprop', metrics=["accuracy"])
+    return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
