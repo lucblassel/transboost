@@ -107,21 +107,8 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
-
-    model.add(Conv2D(32, (3, 3), input_shape=(3, 150, 150)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Conv2D(32, (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-
-    model.add(Conv2D(64, (3, 3)))
-    model.add(Activation('relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    
     model.add(Flatten(input_shape=train_data.shape[1:]))
-    model.add(Dense(1024, activation='relu'))
+    model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, activation='sigmoid'))
 
