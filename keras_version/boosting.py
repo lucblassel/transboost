@@ -111,7 +111,7 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Dense(1024, activation='sigmoid'))
     #model.add(Dropout(0.5))
     model.add(Dense(1, activation='softmax'))
-    model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = optimizers.Adam(lr=0.01), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
