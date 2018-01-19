@@ -17,6 +17,8 @@ from  callbackBoosting import *
 from keras.callbacks import EarlyStopping
 from keras.preprocessing.image import ImageDataGenerator
 from dataLoader import *
+from pathlib import Path
+
 
 #####################
 # LOADING DATA        #
@@ -85,16 +87,22 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
 def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size):
 
     print('bottleneck_features_train.npy')
-    bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
-    np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
+    file1 = Path('bottleneck_features_train.npy')
+    if not file1.is_file():
+        bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=True, verbose=1)
+        np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
     print('bottleneck_features_val.npy')
-    bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
-    np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
+    file2 = Path('bottleneck_features_val.npy')
+    if not file2.is_file():
+        bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=True, verbose=1)
+        np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
     print('bottleneck_features_test.npy')
-    bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
-    np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
+    file3 = Path('bottleneck_features_test.npy')
+    if not file3.is_file():
+        bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+        np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
 
 def top_layer_builder(lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
