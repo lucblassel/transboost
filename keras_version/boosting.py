@@ -19,6 +19,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from dataLoader import *
 from pathlib import Path
 from keras.utils.np_utils import to_categorical
+import pandas as pd
 
 #####################
 # LOADING DATA        #
@@ -319,10 +320,12 @@ def main():
     top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
     epochs = 50
-    recompute = True
+    recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
-    print(train_generator.classes)
+    ps = pandas.Series(test_generator.classes)
+    counts = ps.value_counts()
+    print(counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
     top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator)
