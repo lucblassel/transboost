@@ -327,6 +327,8 @@ def main():
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     print(train_generator)
+    print(dir(train_generator))
+    print(train_generator.class_indices)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
     top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr)
