@@ -291,10 +291,10 @@ def main():
     recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
-    pstest = pd.Series(test_generator.classes)
+    pstest = pd.Series(test_generator.classes[:testNum])
     counts = pstest.value_counts()
     print("test classes ",counts)
-    pstrain = pd.Series(train_generator.classes)
+    pstrain = pd.Series(train_generator.classes[:trainNum])
     counts = pstrain.value_counts()
     print("test classes ",counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
