@@ -57,13 +57,23 @@ def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 def create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio):
     img_size = originalSize*resizeFactor
 
-    train_datagen = ImageDataGenerator(rescale=1. / 255,
-                                       rotation_range=transformation_ratio,
-                                       shear_range=transformation_ratio,
-                                       zoom_range=transformation_ratio,
-                                       cval=transformation_ratio,
-                                       horizontal_flip=True,
-                                       vertical_flip=True)
+    # train_datagen = ImageDataGenerator(rescale=1. / 255,
+    #                                    rotation_range=transformation_ratio,
+    #                                    shear_range=transformation_ratio,
+    #                                    zoom_range=transformation_ratio,
+    #                                    cval=transformation_ratio,
+    #                                    horizontal_flip=True,
+    #                                    vertical_flip=True)
+
+   train_datagen =  ImageDataGenerator(
+        rescale=1. / 255,
+        rotation_range=40,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
+        shear_range=0.2,
+        zoom_range=0.2,
+        horizontal_flip=True,
+        fill_mode='nearest')
 
     validation_datagen = ImageDataGenerator(rescale=1. / 255)
 
@@ -112,11 +122,9 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Flatten(input_shape=train_data.shape[1:]))
     model.add(Dense(256, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(64, activation='relu'))
-    model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
     #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
-    model.compile(optimizer = optimizers.Adam(lr=0.01), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
@@ -308,8 +316,8 @@ def main():
     valNum = 512
     testNum = 512
     top_model_weights_path = 'bottleneck_fc_model.h5'
-    lr = 0.001
-    epochs = 50
+    lr = 0.0001
+    epochs = 1000
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size)
