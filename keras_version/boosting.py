@@ -303,7 +303,7 @@ def main():
     valNum = 512
     testNum = 512
     top_model_weights_path = 'bottleneck_fc_model.h5'
-    lr = 0.0001
+    lr = 0.001
     epochs = 50
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
