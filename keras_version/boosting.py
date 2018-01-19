@@ -116,7 +116,7 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
     #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
-    model.compile(optimizer = optimizers.Adam(lr=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = optimizers.Adam(lr=0.01), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
