@@ -18,7 +18,7 @@ from keras.callbacks import EarlyStopping
 from keras.preprocessing.image import ImageDataGenerator
 from dataLoader import *
 from pathlib import Path
-
+from keras.utils.np_utils import to_categorical
 
 #####################
 # LOADING DATA        #
@@ -113,28 +113,31 @@ def top_layer_builder(lr):
     model.add(Dropout(0.3))
     model.add(Dense(1, activation='softmax'))
     model.summary()
-    model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     train_labels = np.array([0] * int(trainNum//2) + [1] * int(trainNum//2))
+    train_labels_binary = to_categorical(train_labels)
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
     validation_labels = np.array([0] * int(valNum//2) + [1] * int(valNum//2))
+    validation_labels_binary = to_categorical(train_labels)
 
     test_data = np.load(open('bottleneck_features_val.npy',"rb"))
     test_labels = np.array([0] * int(testNum//2) + [1] * int(testNum//2))
+    test_labels_binary = to_categorical(test_labels)
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-    top_model.fit(train_data, train_labels,
+    top_model.fit(train_data, train_labels_binary,
               epochs=epochs,
               batch_size=batch_size,
-              validation_data=(validation_data, validation_labels))
+              validation_data=(validation_data, validation_labels_binary))
               #callbacks = [earlystop])
 
-    print(top_model.evaluate(test_data, test_labels, verbose=1))
+    print(top_model.evaluate(test_data, test_labels_binary, verbose=1))
 
     top_model.save_weights(top_model_weights_path)
 
