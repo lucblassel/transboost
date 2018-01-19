@@ -107,7 +107,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 def top_layer_builder(lr,num_of_classes):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     top_layers = Sequential()
-    top_layers = Flatten(input_shape=train_data.shape[1:])
+    top_layers = Flatten()
     top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
     top_layers = Dropout(0.5)(top_layers)
     top_layers = Dense(num_of_classes, activation="relu",input_shape=(num_of_classes,))(top_layers)
