@@ -105,6 +105,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)        
 
 def top_layer_builder(lr,num_of_classes):
+    train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
     model.add(Dense(1024, activation='relu'))
