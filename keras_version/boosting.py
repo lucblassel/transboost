@@ -111,7 +111,7 @@ def top_layer_builder(lr):
     model.add(Dropout(0.4))
     model.add(GlobalAveragePooling2D())
     model.add(Dropout(0.3))
-    model.add(Dense(2, activation='softmax'))
+    model.add(Dense(1, activation='softmax'))
     model.summary()
     model.compile(loss='categorical_crossentropy', optimizer='rmsprop', metrics=['accuracy'])
     return model
