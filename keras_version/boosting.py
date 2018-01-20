@@ -27,7 +27,10 @@ downloader(url,path)
 # BUILDING MODEL FOR TWO CLASSES    #
 #####################################
 
-def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
+def bottom_layers_builder(originalSize,resizeFactor):
+    """
+    romain.gautron@agroparistech.fr
+    """
     img_size = originalSize*resizeFactor
     #model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
     model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
@@ -37,6 +40,9 @@ def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
     return model
 
 def create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio):
+    """
+    romain.gautron@agroparistech.fr
+    """
     img_size = originalSize*resizeFactor
 
     train_datagen = ImageDataGenerator(rescale=1. / 255,
@@ -72,7 +78,9 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
     return train_generator,validation_generator,test_generator
 
 def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute_transfer_values):
-
+    """
+    romain.gautron@agroparistech.fr
+    """
     file1 = Path('bottleneck_features_train.npy')
     if not file1.is_file() or recompute_transfer_values:
         print('bottleneck_features_train.npy')
@@ -93,6 +101,9 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
 def top_layer_builder(lr,num_of_classes):
+    """
+    romain.gautron@agroparistech.fr
+    """
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
     model = Sequential()
     model.add(Flatten(input_shape=train_data.shape[1:]))
@@ -106,6 +117,9 @@ def top_layer_builder(lr,num_of_classes):
     return model
 
 def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
+    """
+    romain.gautron@agroparistech.fr
+    """
     file_exists = False
     file = Path(path_to_best_model)
     if file.is_file():
@@ -134,6 +148,9 @@ def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNu
         print(top_model.evaluate(test_data, test_labels, verbose=1))
 
 def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
+    """
+    romain.gautron@agroparistech.fr
+    """
     top_model.load_weights(path_to_best_top_model)
     full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
     full_model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
@@ -315,7 +332,7 @@ def main():
     top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
     top_model_init = top_layer_builder(lr_source,num_of_classes)
     full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
-    probas = full_model.predict_generator(test_generator_source, step = testNum_source // batch_size_source, use_multiprocessing=False, verbose=1)
+    probas = full_model.predict_generator(test_generator_source, steps = testNum_source // batch_size_source, use_multiprocessing=False, verbose=1)
     y_classes = np.array(probas)>proba_threshold
     y_classes = y_classes.astype(int)
     psy = pd.Series(y_classes)
