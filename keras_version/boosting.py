@@ -316,14 +316,14 @@ def main():
     proba_threshold = .5
 
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
-    train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
+    train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_source,transformation_ratio)
     pstest = pd.Series(test_generator_source.classes_source[:testNum_source])
     counts = pstest.value_counts()
     print("test classes ",counts)
     pstrain = pd.Series(train_generator_source.classes_source[:trainNum_source])
     counts = pstrain.value_counts()
     print("train classes ",counts)
-    save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size,recompute_transfer_values)
+    save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size_source,recompute_transfer_values)
     top_model = top_layer_builder(lr_source,num_of_classes)
     top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
     top_model_init = top_layer_builder(lr_source,num_of_classes)
@@ -338,8 +338,9 @@ def main():
     layerLimit = 15
     epochs_target = 100
     lr_target = 0.0001
+    batch_size_source = 10
 
-    train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
+    train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
     first_layers_modified_model = first_layers_modified_model_builder(bottom_model,layerLimit)
     first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
