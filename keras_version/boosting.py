@@ -71,9 +71,9 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
 
     return train_generator,validation_generator,test_generator
 
-def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute):
+def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute_transfer_values):
 
-    if not recompute :
+    if not recompute_transfer_values :
         
         file1 = Path('bottleneck_features_train.npy')
         if not file1.is_file():
@@ -118,27 +118,33 @@ def top_layer_builder(lr,num_of_classes):
     model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-def top_layer_trainer(top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
-    train_data = np.load(open('bottleneck_features_train.npy',"rb"))
+def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
+    file_exists = False
+    file = Path(path_to_best_model)
+    if file.is_file():
+        file_exists = True
 
-    validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
+    if not file_exists or train_top_model : 
+        train_data = np.load(open('bottleneck_features_train.npy',"rb"))
 
-    test_data = np.load(open('bottleneck_features_val.npy',"rb"))
+        validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
 
-    train_labels,validation_labels,test_labels = train_generator.classes[:trainNum],validation_generator.classes[:valNum],test_generator.classes[:testNum]
+        test_data = np.load(open('bottleneck_features_val.npy',"rb"))
 
-    earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
+        train_labels,validation_labels,test_labels = train_generator.classes[:trainNum],validation_generator.classes[:valNum],test_generator.classes[:testNum]
 
-    checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
+        earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-    top_model.fit(train_data, train_labels,
-              epochs=epochs,
-              batch_size=batch_size,
-              validation_data=(validation_data, validation_labels),
-              callbacks = [earlystop,checkpoint],
-              shuffle = True)
+        checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
 
-    print(top_model.evaluate(test_data, test_labels, verbose=1))
+        top_model.fit(train_data, train_labels,
+                  epochs=epochs,
+                  batch_size=batch_size,
+                  validation_data=(validation_data, validation_labels),
+                  callbacks = [earlystop,checkpoint],
+                  shuffle = True)
+
+        print(top_model.evaluate(test_data, test_labels, verbose=1))
 
 def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
     top_model.load_weights(path_to_best_top_model)
@@ -154,7 +160,7 @@ def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
 # TRAINING FIRST LAYERS                                                    #
 ############################################################################
 
-def first_layers_modified_model_builder(model,layerLimit,**kwargs):
+def first_layers_modified_model_builder(model,layerLimit):
     """
     this function changes a model whose first layers are trainable with reinitialized weights
     INPUTS :
@@ -174,12 +180,13 @@ def first_layers_modified_model_builder(model,layerLimit,**kwargs):
         layer.trainable = False
     return model_copy
 
-def first_layers_modified_model_trainer(model,x_train,y_train_bin,epochs,threshold,**kwargs):
+def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
-    model.fit(x = x_train, y = y_train_bin, batch_size = 64, epochs = epochs,callbacks = [callbackBoosting(threshold)])
-
+    model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], use_multiprocessing=False, shuffle=True)
+    score = model.evaluate_generator(test_generator)
+    print("projector score : ",score)
 
 #######################################################
 #                BOOSTING                             #
@@ -279,50 +286,63 @@ def accuracy(y_true,y_pred):
 def main():
     """ this function stands for testing purposes
     """
-    classes = ['dog','truck']
-    num_of_classes = len(classes)
-    batch_size = 10
+    classes_source = ['dog','truck']
+    classes_target = ['ship','frog']
+    num_of_classes = len(classes_source)
+    
+    batch_size_source = 10
     transformation_ratio = .05
     originalSize = 32
     resizeFactor = 5
     path_to_train = path + "train"
     path_to_validation = path + "validation"
     path_to_test = path + "test"
-    trainNum = 7950
-    valNum = 2040
-    testNum = 2040
-    lr = 0.0001
-    epochs = 50
-    recompute = False
+    
     path_to_best_top_model = "best_top_model.hdf5"
+
+    trainNum_source = 7950
+    valNum_source = 2040
+    testNum_source = 2040
+    trainNum_target = 7950
+    valNum_target = 2040
+    testNum_target = 2040
+    
+    lr_source = 0.0001
+    epochs_source = 50
+
+    recompute_transfer_values = False
+    train_top_model = False
+
+    proba_threshold = .5
+
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
-    train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
-    pstest = pd.Series(test_generator.classes[:testNum])
+    train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
+    pstest = pd.Series(test_generator_source.classes_source[:testNum_source])
     counts = pstest.value_counts()
     print("test classes ",counts)
-    pstrain = pd.Series(train_generator.classes[:trainNum])
+    pstrain = pd.Series(train_generator_source.classes_source[:trainNum_source])
     counts = pstrain.value_counts()
     print("train classes ",counts)
-    save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
-    top_model = top_layer_builder(lr,num_of_classes)
-    top_layer_trainer(top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_top_model)
-    top_model_init = top_layer_builder(lr,num_of_classes)
-    full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr)
-    probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
-    y_classes = probas.argmax(axis=-1)
+    save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size,recompute_transfer_values)
+    top_model = top_layer_builder(lr_source,num_of_classes)
+    top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
+    top_model_init = top_layer_builder(lr_source,num_of_classes)
+    full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
+    probas = full_model.predict_generator(test_generator_source, step = testNum_source // batch_size_source, use_multiprocessing=False, verbose=1)
+    y_classes = np.array(probas)>proba_threshold
+    y_classes = y_classes.astype(int)
     psy = pd.Series(y_classes)
     counts = psy.value_counts()
     print("pred counts",counts)
 
-    # full_model = full_model_builder(img_width,img_height)
-    # layerLimit = 10
-    # epochs = 1
-    # threshold = .5
-    # times = 5
-    # model_list, error_list, alpha_list = booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times)
-    # print("model_list ", model_list)
-    # print("error_list ", error_list)
-    # print("alpha_list ", alpha_list)
+    layerLimit = 15
+    epochs_target = 100
+    lr_target = 0.0001
+
+    train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
+    first_layers_modified_model = first_layers_modified_model_builder(bottom_model,layerLimit)
+    first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
+
 
 if __name__ == '__main__':
 	main()
