@@ -357,6 +357,8 @@ def main():
 
     train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
     first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
+    first_layers_modified_model_score = first_layers_modified_model.evaluate_generator(test_generator_target)
+    print(first_layers_modified_model_score)
     first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
 
