@@ -288,9 +288,9 @@ def main():
     path_to_train = path + "train"
     path_to_validation = path + "validation"
     path_to_test = path + "test"
-    trainNum = 8020
-    valNum = 1970
-    testNum = 1970
+    trainNum = 7950
+    valNum = 2040
+    testNum = 2040
     lr = 0.0001
     epochs = 50
     recompute = False
