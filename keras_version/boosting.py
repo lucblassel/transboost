@@ -175,10 +175,13 @@ def first_layers_modified_model_builder(model,layerLimit):
     """
     model_copy =  model
     for layer in model_copy.layers[:layerLimit]:
+        session = K.get_session()
         layer.trainable = True
-        previous_weights = layer.get_weights()
-        new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
-        layer.set_weights(new_weights)
+        # previous_weights = layer.get_weights()
+        # new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
+        # layer.set_weights(new_weights) 
+        if hasattr(layer, 'kernel_initializer'):
+            layer.kernel.initializer.run(session=session)
 
     for layer in model_copy.layers[layerLimit:]:
         layer.trainable = False
@@ -307,9 +310,9 @@ def main():
     trainNum_source = 7950
     valNum_source = 2040
     testNum_source = 2040
-    trainNum_target = 7950
-    valNum_target = 2040
-    testNum_target = 2040
+    trainNum_target = 8010
+    valNum_target = 1980
+    testNum_target = 1980
     
     lr_source = 0.0001
     epochs_source = 50
