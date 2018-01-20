@@ -164,9 +164,10 @@ def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
 # TRAINING FIRST LAYERS                                                    #
 ############################################################################
 
-def first_layers_modified_model_builder(model,layerLimit):
+def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers ):
     """
     romain.gautron@agroparistech.fr
+
     this function changes a model whose first layers are trainable with reinitialized weights
     INPUTS :
     - model to modifiy
@@ -182,12 +183,13 @@ def first_layers_modified_model_builder(model,layerLimit):
         # previous_weights = layer.get_weights()
         # new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
         # layer.set_weights(new_weights) 
-        for v in layer.__dict__:
-            v_arg = getattr(layer,v)
-            if hasattr(v_arg,'initializer'):
-                initializer_method = getattr(v_arg, 'initializer')
-                initializer_method.run(session=session)
-                print('reinitializing layer {}.{}'.format(layer.name, v))
+        if reinitialize_bottom_layers :
+            for v in layer.__dict__:
+                v_arg = getattr(layer,v)
+                if hasattr(v_arg,'initializer'):
+                    initializer_method = getattr(v_arg, 'initializer')
+                    initializer_method.run(session=session)
+                    print('reinitializing layer {}.{}'.format(layer.name, v))
 
     for layer in model_copy.layers[layerLimit:]:
         layer.trainable = False
@@ -196,6 +198,7 @@ def first_layers_modified_model_builder(model,layerLimit):
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
     """
+    romain.gautron@agroparistech.fr
     this function trains models from [first_layers_modified_model_builder] function
     """
     model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
@@ -301,7 +304,7 @@ def main():
     """ this function stands for testing purposes
     """
     classes_source = ['dog','truck']
-    classes_target = ['ship','frog']
+    classes_target = ['deer','horse']
     num_of_classes = len(classes_source)
     
     batch_size_source = 10
@@ -345,14 +348,15 @@ def main():
     # full_model_score = full_model.evaluate_generator(test_generator_source)
     # print(full_model_score)
 
-    layerLimit = 10
+    layerLimit = 15
     epochs_target = 100
     lr_target = 0.0001
     batch_size_target = 10
     threshold = .65
+    reinitialize_bottom_layers = False
 
     train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
-    first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit)
+    first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
     first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
 
