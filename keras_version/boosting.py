@@ -201,7 +201,7 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
 	romain.gautron@agroparistech.fr
 	this function trains models from [first_layers_modified_model_builder] function
 	"""
-	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
+	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
 	score = model.evaluate_generator(test_generator)
 	print("projector score : ", score)
 
@@ -328,7 +328,7 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr)
 			
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting2(threshold)], use_multiprocessing=False, shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], use_multiprocessing=False, shuffle=True)
 			
 			error = 1 - current_model.evaluate(x_train_boost, y_train_boost, verbose=1)[1]
 		alpha = .5*np.log((1-error)/error)
