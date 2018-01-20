@@ -175,6 +175,7 @@ def first_layers_modified_model_builder(model,layerLimit):
     """
     model_copy =  model
     for layer in model_copy.layers[:layerLimit]:
+        
         session = k.get_session()
         layer.trainable = True
         # previous_weights = layer.get_weights()
