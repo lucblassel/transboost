@@ -279,7 +279,7 @@ def accuracy(y_true,y_pred):
 def main():
     """ this function stands for testing purposes
     """
-    classes = ['horse','deer']
+    classes = ['dog','truck']
     num_of_classes = len(classes)
     batch_size = 10
     transformation_ratio = .05
