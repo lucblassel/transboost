@@ -464,7 +464,7 @@ def main():
 	# first_layers_modified_model_trainer(small_net_builder,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
 	proba_threshold = .5
-	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
+	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	print(accuracy(y_test_target,predicted_classes))
