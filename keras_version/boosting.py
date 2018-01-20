@@ -328,7 +328,7 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr)
 			
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], use_multiprocessing=False, shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 			
 			error = 1 - current_model.evaluate(x_train_boost, y_train_boost, verbose=1)[1]
 		alpha = .5*np.log((1-error)/error)
