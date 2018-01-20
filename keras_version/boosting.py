@@ -132,7 +132,6 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
               batch_size=batch_size,
               validation_data=(validation_data, validation_labels),
               callbacks = [earlystop],
-              use_multiprocessing=True,
               shuffle = True)
 
     print(top_model.evaluate(test_data, test_labels, verbose=1))
