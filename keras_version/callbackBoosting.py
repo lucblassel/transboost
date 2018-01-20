@@ -17,13 +17,14 @@ class callbackBoosting(keras.callbacks.Callback):
     def __init__(self,threshold,metric):
         super(callbackBoosting,self).__init__()
         self.threshold = threshold
+        self.metric = metric
 
     def on_train_end(self, logs={}):
         print('training ended')
         return
 
     def on_epoch_end(self, epoch, logs={}):
-        if logs.get(metric) >= self.threshold:
+        if logs.get(self.metric) >= self.threshold:
             self.model.stop_training = True
-            print('stopping training at accuracy = '+str(logs.get('val_acc')))
+            print('stopping training at accuracy = '+str(logs.get(self.metric)))
         return
