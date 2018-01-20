@@ -166,6 +166,7 @@ def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
 
 def first_layers_modified_model_builder(model,layerLimit):
     """
+    romain.gautron@agroparistech.fr
     this function changes a model whose first layers are trainable with reinitialized weights
     INPUTS :
     - model to modifiy
@@ -190,6 +191,7 @@ def first_layers_modified_model_builder(model,layerLimit):
 
     for layer in model_copy.layers[layerLimit:]:
         layer.trainable = False
+    
     return model_copy
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
