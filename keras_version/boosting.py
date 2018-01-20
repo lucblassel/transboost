@@ -118,7 +118,7 @@ def top_layer_builder(lr,num_of_classes):
     model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
+def top_layer_trainer(top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
@@ -281,7 +281,6 @@ def main():
     """
     classes = ['horse','deer']
     num_of_classes = len(classes)
-    top_model_weights_path = 'fc_model.h5'
     batch_size = 10
     transformation_ratio = .05
     originalSize = 32
@@ -292,11 +291,9 @@ def main():
     trainNum = 8020
     valNum = 1970
     testNum = 1970
-    top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
     epochs = 50
     recompute = False
-    path_to_best_top_model = "best_model.hdf5"
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     pstest = pd.Series(test_generator.classes[:testNum])
@@ -307,14 +304,14 @@ def main():
     print("train classes ",counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
-    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_top_model)
+    top_layer_trainer(top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_top_model)
     top_model_init = top_layer_builder(lr,num_of_classes)
     full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr)
     probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
     y_classes = probas.argmax(axis=-1)
     psy = pd.Series(y_classes)
     counts = psy.value_counts()
-    print(counts)
+    print("pred counts",counts)
 
     # full_model = full_model_builder(img_width,img_height)
     # layerLimit = 10
