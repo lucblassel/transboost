@@ -190,7 +190,7 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
     """
     model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], use_multiprocessing=False, shuffle=True)
     score = model.evaluate_generator(test_generator)
-    print("projector score : ",score)
+    print("projector score : ", score)
 
 #######################################################
 #                BOOSTING                             #
@@ -332,12 +332,14 @@ def main():
     top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
     top_model_init = top_layer_builder(lr_source,num_of_classes)
     full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
-    probas = full_model.predict_generator(test_generator_source, steps = testNum_source // batch_size_source, use_multiprocessing=False, verbose=1)
-    y_classes = np.array(probas)>proba_threshold
-    y_classes = y_classes.astype(int)
-    psy = pd.Series(y_classes)
-    counts = psy.value_counts()
-    print("pred counts",counts)
+    # probas = full_model.predict_generator(test_generator_source, steps = testNum_source // batch_size_source, use_multiprocessing=False, verbose=1)
+    # y_classes = np.array(probas)>proba_threshold
+    # y_classes = y_classes.astype(int)
+    # psy = pd.Series(y_classes)
+    # counts = psy.value_counts()
+    # print("pred counts",counts)
+    full_model_score = full_model.evaluate_generator(test_generator)
+    print(full_model_score)
 
     layerLimit = 15
     epochs_target = 100
