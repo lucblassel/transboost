@@ -338,7 +338,7 @@ def main():
     # psy = pd.Series(y_classes)
     # counts = psy.value_counts()
     # print("pred counts",counts)
-    full_model_score = full_model.evaluate_generator(test_generator)
+    full_model_score = full_model.evaluate_generator(test_generator_source)
     print(full_model_score)
 
     layerLimit = 15
