@@ -181,8 +181,12 @@ def first_layers_modified_model_builder(model,layerLimit):
         # previous_weights = layer.get_weights()
         # new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
         # layer.set_weights(new_weights) 
-        if hasattr(layer, 'kernel_initializer'):
-            layer.kernel.initializer.run(session=session)
+        for v in layer.__dict__:
+        v_arg = getattr(layer,v)
+        if hasattr(v_arg,'initializer'):
+            initializer_method = getattr(v_arg, 'initializer')
+            initializer_method.run(session=session)
+            print('reinitializing layer {}.{}'.format(layer.name, v))
 
     for layer in model_copy.layers[layerLimit:]:
         layer.trainable = False
