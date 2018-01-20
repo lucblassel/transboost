@@ -294,6 +294,7 @@ def main():
     lr = 0.0001
     epochs = 50
     recompute = False
+    path_to_best_top_model = "best_top_model.hdf5"
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     pstest = pd.Series(test_generator.classes[:testNum])
