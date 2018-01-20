@@ -39,15 +39,15 @@ def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 def create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio):
     img_size = originalSize*resizeFactor
 
-    # train_datagen = ImageDataGenerator(rescale=1. / 255,
-    #                                    rotation_range=transformation_ratio,
-    #                                    shear_range=transformation_ratio,
-    #                                    zoom_range=transformation_ratio,
-    #                                    cval=transformation_ratio,
-    #                                    horizontal_flip=True,
-    #                                    vertical_flip=True)
+    train_datagen = ImageDataGenerator(rescale=1. / 255,
+                                       rotation_range=transformation_ratio,
+                                       shear_range=transformation_ratio,
+                                       zoom_range=transformation_ratio,
+                                       cval=transformation_ratio,
+                                       horizontal_flip=True,
+                                       vertical_flip=True)
 
-    train_datagen = ImageDataGenerator(rescale=1. / 255,rotation_range=40,width_shift_range=0.2,height_shift_range=0.2,shear_range=0.2,zoom_range=0.2,horizontal_flip=True,fill_mode='nearest')
+    # train_datagen = ImageDataGenerator(rescale=1. / 255,rotation_range=40,width_shift_range=0.2,height_shift_range=0.2,shear_range=0.2,zoom_range=0.2,horizontal_flip=True,fill_mode='nearest')
 
     validation_datagen = ImageDataGenerator(rescale=1. / 255)
 
@@ -109,7 +109,7 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Flatten(input_shape=train_data.shape[1:]))
     model.add(Dense(1024, activation='relu'))
     model.add(Dropout(0.5))
-    model.add(Dense(1024, activation='relu'))
+    model.add(Dense(512, activation='relu'))
     model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
     #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
@@ -131,7 +131,9 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
               epochs=epochs,
               batch_size=batch_size,
               validation_data=(validation_data, validation_labels),
-              callbacks = [earlystop])
+              callbacks = [earlystop],
+              use_multiprocessing=True,
+              shuffle = True)
 
     print(top_model.evaluate(test_data, test_labels, verbose=1))
 
@@ -139,7 +141,7 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
 
 def full_model_builder(bottom_model,top_model,lr):
     full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
-    full_model.compile(optimizer = optimizers.Adam(lr=lr), loss='binary_crossentropy', metrics=['accuracy'])
+    full_model.compile(optimizer = optimizers.Adam(lr=lr,momentun=.9), loss='binary_crossentropy', metrics=['accuracy'])
     for layer in full_model.layers:
         layer.trainable = False
     return full_model
@@ -290,7 +292,7 @@ def main():
     top_model_weights_path = 'bottleneck_fc_model.h5'
     lr = 0.0001
     epochs = 50
-    recompute = True
+    recompute = False
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     pstest = pd.Series(test_generator.classes[:testNum])
