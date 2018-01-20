@@ -198,7 +198,7 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
     """
     this function trains models from [first_layers_modified_model_builder] function
     """
-    model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], use_multiprocessing=False, shuffle=True)
+    model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold)], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
     score = model.evaluate_generator(test_generator)
     print("projector score : ", score)
 
@@ -345,7 +345,7 @@ def main():
     # full_model_score = full_model.evaluate_generator(test_generator_source)
     # print(full_model_score)
 
-    layerLimit = 15
+    layerLimit = 10
     epochs_target = 100
     lr_target = 0.0001
     batch_size_target = 10
