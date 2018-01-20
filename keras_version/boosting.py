@@ -209,9 +209,9 @@ def small_net_builder(originalSize,resizeFactor,lr):
 	img_size = originalSize*resizeFactor
 
 	if k.image_data_format() == 'channels_first':
-	input_shape = (3, img_size, img_size)
+		input_shape = (3, img_size, img_size)
 	else:
-	input_shape = (img_size, img_size, 3)
+		input_shape = (img_size, img_size, 3)
 
 	model = Sequential()
 	model.add(Conv2D(32, (3, 3), input_shape=input_shape))
