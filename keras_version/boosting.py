@@ -13,9 +13,9 @@ from keras import optimizers
 from keras.models import Sequential, Model
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
 from keras import backend as k
+from keras.preprocessing.image import ImageDataGenerator
 from  callbackBoosting import *
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from keras.preprocessing.image import ImageDataGenerator
 from dataLoader import *
 from pathlib import Path
 from keras.utils.np_utils import to_categorical
@@ -175,7 +175,7 @@ def first_layers_modified_model_builder(model,layerLimit):
     """
     model_copy =  model
     for layer in model_copy.layers[:layerLimit]:
-        session = K.get_session()
+        session = k.get_session()
         layer.trainable = True
         # previous_weights = layer.get_weights()
         # new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
