@@ -14,7 +14,7 @@ from keras.models import Sequential, Model
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
 from keras import backend as k
 from  callbackBoosting import *
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 from dataLoader import *
 from pathlib import Path
@@ -47,8 +47,6 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
                                        horizontal_flip=True,
                                        vertical_flip=True)
 
-    # train_datagen = ImageDataGenerator(rescale=1. / 255,rotation_range=40,width_shift_range=0.2,height_shift_range=0.2,shear_range=0.2,zoom_range=0.2,horizontal_flip=True,fill_mode='nearest')
-
     validation_datagen = ImageDataGenerator(rescale=1. / 255)
 
     test_datagen = ImageDataGenerator(rescale=1. / 255)
@@ -76,30 +74,34 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
 def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute):
 
     if not recompute :
-        print('bottleneck_features_train.npy')
+        
         file1 = Path('bottleneck_features_train.npy')
         if not file1.is_file():
+            print('bottleneck_features_train.npy')
             bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
-        print('bottleneck_features_val.npy')
+        
         file2 = Path('bottleneck_features_val.npy')
         if not file2.is_file():
+            print('bottleneck_features_val.npy')
             bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
-        print('bottleneck_features_test.npy')
         file3 = Path('bottleneck_features_test.npy')
         if not file3.is_file():
+            print('bottleneck_features_test.npy')
             bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
             np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
     else :
-
+        print('bottleneck_features_train.npy')
         bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
+        print('bottleneck_features_val.npy')
         bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
+        print('bottleneck_features_test.npy')
         bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
         np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
 
@@ -116,7 +118,7 @@ def top_layer_builder(lr,num_of_classes):
     model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
-def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator):
+def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
     train_data = np.load(open('bottleneck_features_train.npy',"rb"))
 
     validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
@@ -127,18 +129,19 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
 
     earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
+    checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
+
     top_model.fit(train_data, train_labels,
               epochs=epochs,
               batch_size=batch_size,
               validation_data=(validation_data, validation_labels),
-              callbacks = [earlystop],
+              callbacks = [earlystop,checkpoint],
               shuffle = True)
 
     print(top_model.evaluate(test_data, test_labels, verbose=1))
 
-    top_model.save_weights(top_model_weights_path)
-
-def full_model_builder(bottom_model,top_model,lr):
+def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
+    top_model.load_weights(path_to_best_top_model)
     full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
     full_model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     for layer in full_model.layers:
@@ -189,6 +192,7 @@ def take(tab,indexes):
 		output[c] = tab[i]
 		c+=1
 	return output
+
 # def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
 def booster(full_model,x_train,y_train_bin,epochs,threshold,layerLimit,times,**kwargs):
 	train_length = len(x_train)
@@ -292,6 +296,7 @@ def main():
     lr = 0.0001
     epochs = 50
     recompute = False
+    path_to_best_top_model = "best_model.hdf5"
     bottom_model = bottom_layers_builder(originalSize,resizeFactor)
     train_generator,validation_generator,test_generator = create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio)
     pstest = pd.Series(test_generator.classes[:testNum])
@@ -302,11 +307,14 @@ def main():
     print("train classes ",counts)
     save_bottleneck_features(bottom_model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute)
     top_model = top_layer_builder(lr,num_of_classes)
-    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator)
-    full_model = full_model_builder(bottom_model,top_model,lr)
-    probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=True, verbose=1)
+    top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_top_model)
+    top_model_init = top_layer_builder(lr,num_of_classes)
+    full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr)
+    probas = full_model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
     y_classes = probas.argmax(axis=-1)
-    print(y_classes)
+    psy = pd.Series(y_classes)
+    counts = psy.value_counts()
+    print(counts)
 
     # full_model = full_model_builder(img_width,img_height)
     # layerLimit = 10
