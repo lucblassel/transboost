@@ -113,7 +113,7 @@ def top_layer_builder(lr,num_of_classes):
     model.add(Dropout(0.5))
     model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
     #model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
-    model.compile(optimizer = optimizers.Adam(lr=lr,momentum = .9), loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator):
@@ -141,7 +141,7 @@ def top_layer_trainer(top_model,top_model_weights_path,epochs,batch_size,trainNu
 
 def full_model_builder(bottom_model,top_model,lr):
     full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
-    full_model.compile(optimizer = optimizers.Adam(lr=lr,momentum=.9), loss='binary_crossentropy', metrics=['accuracy'])
+    full_model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
     for layer in full_model.layers:
         layer.trainable = False
     return full_model
