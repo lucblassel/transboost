@@ -3,7 +3,9 @@
 # @Date:   2018-01-15 14:59:20
 # @Last modified by:   zlanderous
 # @Last modified time: 2018-01-17T14:13:05+01:00
-
+"""
+inspired from https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
+"""
 import numpy as np
 import time
 from binariser import *
@@ -206,6 +208,9 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
 	print("projector score : ", score)
 
 def small_net_builder(originalSize,resizeFactor,lr):
+	"""
+	romain.gautron@agroparistech.fr
+	"""
 	img_size = originalSize*resizeFactor
 
 	if k.image_data_format() == 'channels_first':
@@ -239,6 +244,7 @@ def small_net_builder(originalSize,resizeFactor,lr):
 	model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 
 	return model
+
 def from_generator_to_array(classes,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum,valNum,testNum):
 	"""
 	romain.gautron@agroparistech.fr
@@ -346,8 +352,8 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 			else :
 				predicted_classes.append(0)
 
-		for i in range(predicted_prob):
-			if predicted_prob[i] == y_train[i]:
+		for i in range(len(predicted_classes)):
+			if predicted_classes[i] == y_train_boost[i]:
 				prob[i] = prob[i]*np.exp(-alpha)
 			else:
 				prob[i] = prob[i]*np.exp(alpha)
@@ -356,6 +362,9 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 	return model_list, error_list, alpha_list
 
 def prediction_boosting(x,model_list, alpha_list,proba_threshold):
+	"""
+	romain.gautron@agroparistech.fr
+	"""
 	n_samples = len(x)
 	n_models = len(model_list)
 	results = []
@@ -388,6 +397,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	return results
 
 def accuracy(y_true,y_pred):
+	"""
+	romain.gautron@agroparistech.fr
+	"""
 	if isinstance(y_true,np.ndarray):
 		y_true = y_true.tolist()
 	if isinstance(y_pred,np.ndarray):
