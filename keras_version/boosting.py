@@ -349,6 +349,7 @@ def main():
     epochs_target = 100
     lr_target = 0.0001
     batch_size_target = 10
+    threshold = .65
 
     train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
     first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit)
