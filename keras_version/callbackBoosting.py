@@ -27,3 +27,18 @@ class callbackBoosting(keras.callbacks.Callback):
             self.model.stop_training = True
             print('stopping training at accuracy = '+str(logs.get('val_acc')))
         return
+
+class callbackBoosting2(keras.callbacks.Callback):
+    def __init__(self,threshold):
+        super(callbackBoosting,self).__init__()
+        self.threshold = threshold
+
+    def on_train_end(self, logs={}):
+        print('training ended')
+        return
+
+    def on_epoch_end(self, epoch, logs={}):
+        if logs.get('acc') >= self.threshold:
+            self.model.stop_training = True
+            print('stopping training at accuracy = '+str(logs.get('val_acc')))
+        return
