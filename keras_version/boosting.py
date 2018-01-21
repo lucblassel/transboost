@@ -4,7 +4,7 @@
 # @Last modified by:   zlanderous
 # @Last modified time: 2018-01-17T14:13:05+01:00
 """
-inspired from https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
+inspired by https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
 """
 import numpy as np
 import time
@@ -300,7 +300,7 @@ def take(tab,indexes):
 	return output
 
 # def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
-def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr,proba_threshold):
+def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr,proba_threshold):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -336,14 +336,14 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 			
 			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 			
-			error = 1 - current_model.evaluate(x_train, y_train, verbose=1)[1]
+			error = 1 - current_model.evaluate(x_val, y_val, verbose=1)[1]
 		alpha = .5*np.log((1-error)/error)
 
 		error_list.append(error)
 		model_list.append(current_model)
 		alpha_list.append(alpha)
 
-		predicted_probs = current_model.predict(x_train_boost)
+		predicted_probs = current_model.predict(x_train)
 		predicted_classes = []
 
 		for predicted_prob in predicted_probs:
@@ -353,7 +353,7 @@ def booster(full_model,x_train,y_train,epochs,threshold,layerLimit,times,bigNet,
 				predicted_classes.append(0)
 
 		for i in range(len(predicted_classes)):
-			if predicted_classes[i] == y_train_boost[i]:
+			if predicted_classes[i] == y_train[i]:
 				prob[i] = prob[i]*np.exp(-alpha)
 			else:
 				prob[i] = prob[i]*np.exp(alpha)
@@ -372,7 +372,7 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	c = 0
 	for model in model_list:
 		print("beginning prediction for model :",c)
-		probas = model.predict(x)
+		probas = np.array(model.predict(x))
 		print("probas : ", probas)
 		to_append = []
 		for proba in probas:
@@ -480,7 +480,7 @@ def main():
 
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
-	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
 	print(model_list, error_list, alpha_list)
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
