@@ -373,6 +373,7 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	for model in model_list:
 		print("beginning prediction for model :",c)
 		probas = model.predict(x)
+		print("probas : ", probas)
 		to_append = []
 		for proba in probas:
 			if proba >= proba_threshold:
@@ -381,8 +382,10 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 				predicted_class = -1
 			to_append.append(predicted_class)
 		predicted_class_list.append(to_append)
+		print("to_append : ", to_append)
 		print("ending prediction for model :",c)
 		c +=1
+
 	predicted_class_list = np.array(predicted_class_list)
 	predicted_class_list.reshape((n_models,n_samples))
 	predicted_class_list = np.transpose(predicted_class_list)
@@ -391,9 +394,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 
 	for raw_result in raw_results:
 		if raw_result >=0:
-			results.append([0,1])
+			results.append(0)
 		else:
-			results.append([1,0])
+			results.append(-1)
 	return results
 
 def accuracy(y_true,y_pred):
@@ -478,6 +481,7 @@ def main():
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+	print(model_list, error_list, alpha_list)
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
 	print(accuracy(y_test_target,predicted_classes))
