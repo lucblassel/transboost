@@ -23,7 +23,7 @@ from pathlib import Path
 from keras.utils.np_utils import to_categorical
 import pandas as pd
 import copy as cp
-import cPickle as pickle
+import _pickle as pickle
 
 downloader(url,path)
 
