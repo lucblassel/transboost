@@ -7,6 +7,11 @@ train/
 *.snm
 *.toc
 
+# image files
+*.png
+*.svg
+*.jpg
+
 #ignoring zip files
 *.7z
 
