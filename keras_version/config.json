@@ -6,7 +6,7 @@
   "threshold" : 0.65,
   "originalSize" : 32,
   "resizeFactor" : 5,
-  "epochs" : 25,
+  "epochs" : 1000,
   "trainLabels" : ["dog","truck"],
   "trainLabels2" : ["deer","horse"],
   "testLabels" : ["dog","truck"],
