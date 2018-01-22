@@ -22,6 +22,8 @@ from dataLoader import *
 from pathlib import Path
 from keras.utils.np_utils import to_categorical
 import pandas as pd
+import copy as cp
+import cPickle as pickle
 
 downloader(url,path)
 
@@ -177,14 +179,11 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 	OUTPUTS :
 	- copy of the modified model
 	"""
-	model_copy =  model
+	model_copy =  cp.deepcopy(model)
 	for layer in model_copy.layers[:layerLimit]:
 		
 		session = k.get_session()
-		layer.trainable = True
-		# previous_weights = layer.get_weights()
-		# new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
-		# layer.set_weights(new_weights) 
+		layer.trainable = True 
 		if reinitialize_bottom_layers :
 			for v in layer.__dict__:
 				v_arg = getattr(layer,v)
@@ -483,9 +482,10 @@ def main():
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	np.save(open('model_list.npy', 'wb'), model_list)
-	np.save(open('alpha_list.npy', 'wb'), alpha_list)
-	np.save(open('error_list.npy', 'wb'), error_list)	
+	pickler = pickle.Pickler("boosting_list", -1)
+	pickler.dump(model_list)
+	pickler.dump(error_list)
+	pickler.dump(alpha_list)
 	print(model_list, error_list, alpha_list)
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
