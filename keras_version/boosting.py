@@ -482,7 +482,7 @@ def main():
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	pickler = pickle.Pickler("boosting_list", -1)
+	pickler = pickle.Pickler("boosting_list.pkl", -1)
 	pickler.dump(model_list)
 	pickler.dump(error_list)
 	pickler.dump(alpha_list)
