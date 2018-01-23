@@ -494,7 +494,7 @@ def main():
 	print(model_list, error_list, alpha_list)
 	c = 0
 	for model in model_list:
-		path = "model"+ str(c)
+		path = "model"+ str(c) +".h5"
 		model.save(path)
 		c+=1
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
