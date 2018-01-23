@@ -36,8 +36,14 @@ def bottom_layers_builder(originalSize,resizeFactor):
 	romain.gautron@agroparistech.fr
 	"""
 	img_size = originalSize*resizeFactor
+
+	if k.image_data_format() == 'channels_first':
+		input_shape = (3, img_size, img_size)
+	else:
+		input_shape = (img_size, img_size, 3)
+
 	#model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
-	model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
+	model = applications.Xception(weights = "imagenet", include_top=False, input_shape = input_shape)
 
 	for layer in model.layers :
 		layer.trainable = False
@@ -482,7 +488,7 @@ def main():
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	pickler = pickle.Pickler("boosting_list.pkl", -1)
+	pickler = pickle.Pickler(open('model_list.pkl', 'wb'), -1)
 	pickler.dump(model_list)
 	pickler.dump(error_list)
 	pickler.dump(alpha_list)
