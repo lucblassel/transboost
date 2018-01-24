@@ -401,9 +401,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 
 	for raw_result in raw_results:
 		if raw_result >=0:
-			results.append(0)
+			results.append(1)
 		else:
-			results.append(-1)
+			results.append(0)
 	return results
 
 def accuracy(y_true,y_pred):
