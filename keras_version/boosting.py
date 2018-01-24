@@ -506,7 +506,8 @@ def main():
 		path_model = "model"+ str(time) +".h5"
 		model = load_model(path_model)
 		model_list.append(model)
-	error_list,alpha_list = pickle.loads('result_list.pkl')
+	with open('result_list.pkl', 'rb') as pickle_file:
+		error_list,alpha_list = pickle.load(pickle_file)
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	print(accuracy(y_test_target,predicted_classes))
 	
