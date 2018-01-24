@@ -24,6 +24,7 @@ from keras.utils.np_utils import to_categorical
 import pandas as pd
 import copy as cp
 import _pickle as pickle
+from itertools import chain
 
 downloader(url,path)
 
@@ -381,10 +382,10 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 		print("beginning prediction for model :",c)
 		probas = np.array(model.predict(x))
 		print(probas)
-		probas = probas >= proba_threshold 
-		print(probas)
+		booleans = probas >= proba_threshold 
+		booleans = list(chain(*booleans))
 		to_append = []
-		for boolean in probas:
+		for boolean in booleans:
 			print(boolean)
 			if boolean[0]:
 				predicted_class == 1
