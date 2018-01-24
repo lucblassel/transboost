@@ -503,8 +503,8 @@ def main():
 
 	model_list = []
 	for time in range(times):
-		path = "model"+ str(time) +".h5"
-		model = load_model(path)
+		path_model = "model"+ str(time) +".h5"
+		model = load_model(path_model)
 		model_list.append(model)
 	error_list,alpha_list = pickle.load('result_list.pkl')
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
