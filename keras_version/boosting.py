@@ -385,7 +385,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 		booleans = list(chain(*booleans))
 		to_append = []
 		for boolean in booleans:
-			if eval(boolean):
+			print(boolean)
+			print(type(boolean))
+			if True:
 				predicted_class == 1
 			else:
 				predicted_class = -1
