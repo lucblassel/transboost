@@ -12,6 +12,7 @@ train/
 *.svg
 *.jpg
 
+
 #ignoring zip files
 *.7z
 
