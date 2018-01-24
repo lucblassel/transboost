@@ -12,7 +12,7 @@ from binariser import *
 from dataProcessing import *
 from keras import applications
 from keras import optimizers
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, load_model
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
 from keras import backend as k
 from keras.preprocessing.image import ImageDataGenerator
@@ -487,19 +487,28 @@ def main():
 
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
-	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	pickler = pickle.Pickler(open('result_list.pkl', 'wb'), -1)
-	pickler.dump(error_list)
-	pickler.dump(alpha_list)
-	print(model_list, error_list, alpha_list)
-	c = 0
-	for model in model_list:
-		model_path = "model"+ str(c) +".h5"
-		model.save(model_path)
-		c+=1
-	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
-	np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
-	print(accuracy(y_test_target,predicted_classes))
+	# model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+	# pickler = pickle.Pickler(open('result_list.pkl', 'wb'), -1)
+	# pickler.dump(error_list)
+	# pickler.dump(alpha_list)
+	# print(model_list, error_list, alpha_list)
+	# c = 0
+	# for model in model_list:
+	# 	model_path = "model"+ str(c) +".h5"
+	# 	model.save(model_path)
+	# 	c+=1
+	# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+	# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
+	# print(accuracy(y_test_target,predicted_classes))
 
+	model_list = []
+	for time in range(times):
+		path = "model"+ str(time) +".h5"
+		model = load_model(path)
+		model_list.append(model)
+	error_list,alpha_list = pickle.load('result_list.pkl')
+	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+	print(accuracy(y_test_target,predicted_classes))
+	
 if __name__ == '__main__':
 	main()
