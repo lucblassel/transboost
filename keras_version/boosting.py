@@ -507,10 +507,11 @@ def main():
 		model = load_model(path_model)
 		model_list.append(model)
 	with open('result_list.pkl', 'rb') as pickle_file:
-		result_list = pickle.load(pickle_file)
+		alpha_list = pickle.load(pickle_file)
 	print(result_list)
-	#predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
-	#print(accuracy(y_test_target,predicted_classes))
+
+	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+	print(accuracy(y_test_target,predicted_classes))
 	
 if __name__ == '__main__':
 	main()
