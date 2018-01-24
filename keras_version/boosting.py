@@ -12,7 +12,7 @@ from binariser import *
 from dataProcessing import *
 from keras import applications
 from keras import optimizers
-from keras.models import Sequential, Model
+from keras.models import Sequential, Model, load_model
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
 from keras import backend as k
 from keras.preprocessing.image import ImageDataGenerator
@@ -22,6 +22,9 @@ from dataLoader import *
 from pathlib import Path
 from keras.utils.np_utils import to_categorical
 import pandas as pd
+import copy as cp
+import _pickle as pickle
+from itertools import chain
 
 downloader(url,path)
 
@@ -34,8 +37,14 @@ def bottom_layers_builder(originalSize,resizeFactor):
 	romain.gautron@agroparistech.fr
 	"""
 	img_size = originalSize*resizeFactor
+
+	if k.image_data_format() == 'channels_first':
+		input_shape = (3, img_size, img_size)
+	else:
+		input_shape = (img_size, img_size, 3)
+
 	#model = applications.InceptionV3(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
-	model = applications.Xception(weights = "imagenet", include_top=False, input_shape = (img_size, img_size, 3))
+	model = applications.Xception(weights = "imagenet", include_top=False, input_shape = input_shape)
 
 	for layer in model.layers :
 		layer.trainable = False
@@ -177,14 +186,11 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 	OUTPUTS :
 	- copy of the modified model
 	"""
-	model_copy =  model
+	model_copy =  cp.deepcopy(model)
 	for layer in model_copy.layers[:layerLimit]:
 		
 		session = k.get_session()
-		layer.trainable = True
-		# previous_weights = layer.get_weights()
-		# new_weights = list((10*np.random.random((np.array(previous_weights).shape))))
-		# layer.set_weights(new_weights) 
+		layer.trainable = True 
 		if reinitialize_bottom_layers :
 			for v in layer.__dict__:
 				v_arg = getattr(layer,v)
@@ -375,16 +381,15 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	for model in model_list:
 		print("beginning prediction for model :",c)
 		probas = np.array(model.predict(x))
-		print("probas : ", probas)
+		booleans = probas >= proba_threshold 
+		booleans = list(chain(*booleans))
 		to_append = []
-		for proba in probas:
-			if proba >= proba_threshold:
-				predicted_class == 1
+		for boolean in booleans:
+			if boolean:
+				to_append.append(1)
 			else:
-				predicted_class = -1
-			to_append.append(predicted_class)
+				to_append.append(-1)
 		predicted_class_list.append(to_append)
-		print("to_append : ", to_append)
 		print("ending prediction for model :",c)
 		c +=1
 
@@ -396,9 +401,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 
 	for raw_result in raw_results:
 		if raw_result >=0:
-			results.append(0)
+			results.append(1)
 		else:
-			results.append(-1)
+			results.append(0)
 	return results
 
 def accuracy(y_true,y_pred):
@@ -469,7 +474,7 @@ def main():
 	threshold = .65
 	reinitialize_bottom_layers = False
 	bigNet = False
-	times = 12
+	times = 100
 
 	# train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
 	# first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
@@ -483,13 +488,28 @@ def main():
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
 	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	np.save(open('model_list.npy', 'wb'), model_list)
-	np.save(open('alpha_list.npy', 'wb'), alpha_list)
-	np.save(open('error_list.npy', 'wb'), error_list)	
-	print(model_list, error_list, alpha_list)
+	# pickler = pickle.Pickler(open('alpha_list.pkl', 'wb'), -1)
+	# pickler.dump(alpha_list)
+	# print(model_list, error_list, alpha_list)
+	# c = 0
+	# for model in model_list:
+	# 	model_path = "model"+ str(c) +".h5"
+	# 	model.save(model_path)
+	# 	c+=1
 	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
-	np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
+	# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
 	print(accuracy(y_test_target,predicted_classes))
 
+	# model_list = []
+	# for time in range(times):
+	# 	path_model = "model"+ str(time) +".h5"
+	# 	model = load_model(path_model)
+	# 	model_list.append(model)
+	# with open('result_list.pkl', 'rb') as pickle_file:
+	# 	alpha_list = pickle.load(pickle_file)
+
+	# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+	print(accuracy(y_test_target,predicted_classes))
+	
 if __name__ == '__main__':
 	main()
