@@ -380,10 +380,10 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	for model in model_list:
 		print("beginning prediction for model :",c)
 		probas = np.array(model.predict(x))
-		print("probas : ", probas)
+		probas = probas >= proba_threshold 
 		to_append = []
-		for proba in probas:
-			if proba >= proba_threshold:
+		for boolean in probas:
+			if boolean:
 				predicted_class == 1
 			else:
 				predicted_class = -1
