@@ -387,11 +387,10 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 		for boolean in booleans:
 			print(boolean)
 			print(type(boolean))
-			if True:
-				predicted_class == 1
+			if boolean:
+				to_append.append(1)
 			else:
-				predicted_class = -1
-			to_append.append(predicted_class)
+				to_append.append(-1)
 		predicted_class_list.append(to_append)
 		print("to_append : ", to_append)
 		print("ending prediction for model :",c)
