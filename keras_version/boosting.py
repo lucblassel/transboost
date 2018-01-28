@@ -34,8 +34,8 @@ models_path = "models"
 
 dataPath = models_path
 if not os.path.exists(dataPath):
-    print("creating" ,dataPath, "directory")
-    os.makedirs(dataPath)
+	print("creating" ,dataPath, "directory")
+	os.makedirs(dataPath)
 
 
 #####################################
@@ -324,7 +324,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	model_list = []
 	error_list = []
 	alpha_list = []
-    c = 1
+	c = 1
 
 	if train_length==0:
 		raise NameError("length of training set equals 0")
@@ -334,7 +334,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 
 	for time in range(times):
 
-        current_model_path = as.join(models_path,"model_"+str(c)+"h5")
+		current_model_path = as.join(models_path,"model_"+str(c)+"h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -360,10 +360,10 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 		error_list.append(error)
 		# model_list.append(current_model)
 
-        model_list.append(current_model_path) #adds model path to list
-        current_model.save(current_model_path) #saves model to disk
+		model_list.append(current_model_path) #adds model path to list
+		current_model.save(current_model_path) #saves model to disk
 
-        del current_model #frees up memory space
+		del current_model #frees up memory space
 
 		alpha_list.append(alpha)
 
@@ -399,7 +399,7 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	for model_name in model_list:
 		print("beginning prediction for model :",c)
 
-        model = load_model(model_name) #loads model from disk
+		model = load_model(model_name) #loads model from disk
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
