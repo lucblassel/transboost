@@ -8,6 +8,7 @@ inspired by https://blog.keras.io/building-powerful-image-classification-models-
 """
 import numpy as np
 import time
+import os
 from binariser import *
 from dataProcessing import *
 from keras import applications
@@ -27,6 +28,15 @@ import _pickle as pickle
 from itertools import chain
 
 downloader(url,path)
+models_path = "models"
+
+# checks if models directory already exists, and iuf not creates it
+
+dataPath = models_path
+if not os.path.exists(dataPath):
+    print("creating" ,dataPath, "directory")
+    os.makedirs(dataPath)
+
 
 #####################################
 # BUILDING MODEL FOR TWO CLASSES    #
@@ -98,7 +108,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 		bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
-	
+
 	file2 = Path('bottleneck_features_val.npy')
 	if not file2.is_file() or recompute_transfer_values:
 		print('bottleneck_features_val.npy')
@@ -109,7 +119,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 	if not file3.is_file() or recompute_transfer_values:
 		print('bottleneck_features_test.npy')
 		bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
-		np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test) 
+		np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)
 
 def top_layer_builder(lr,num_of_classes):
 	"""
@@ -136,7 +146,7 @@ def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNu
 	if file.is_file():
 		file_exists = True
 
-	if not file_exists or train_top_model : 
+	if not file_exists or train_top_model :
 		train_data = np.load(open('bottleneck_features_train.npy',"rb"))
 
 		validation_data = np.load(open('bottleneck_features_val.npy',"rb"))
@@ -188,9 +198,9 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 	"""
 	model_copy =  cp.deepcopy(model)
 	for layer in model_copy.layers[:layerLimit]:
-		
+
 		session = k.get_session()
-		layer.trainable = True 
+		layer.trainable = True
 		if reinitialize_bottom_layers :
 			for v in layer.__dict__:
 				v_arg = getattr(layer,v)
@@ -201,7 +211,7 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 
 	for layer in model_copy.layers[layerLimit:]:
 		layer.trainable = False
-	
+
 	return model_copy
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
@@ -314,7 +324,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	model_list = []
 	error_list = []
 	alpha_list = []
-
+    c = 1
 
 	if train_length==0:
 		raise NameError("length of training set equals 0")
@@ -323,6 +333,8 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	indexes = list(range(train_length))
 
 	for time in range(times):
+
+        current_model_path = as.join(models_path,"model_"+str(c)+"h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -339,14 +351,20 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 				current_model = first_layers_modified_model_builder(full_model,layerLimit)
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr)
-			
+
 			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
-			
+
 			error = 1 - current_model.evaluate(x_val, y_val, verbose=1)[1]
 		alpha = .5*np.log((1-error)/error)
 
 		error_list.append(error)
-		model_list.append(current_model)
+		# model_list.append(current_model)
+
+        model_list.append(current_model_path) #adds model path to list
+        current_model.save(current_model_path) #saves model to disk
+
+        del current_model #frees up memory space
+
 		alpha_list.append(alpha)
 
 		predicted_probs = current_model.predict(x_train)
@@ -378,10 +396,12 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	results = []
 	predicted_class_list = []
 	c = 0
-	for model in model_list:
+	for model_name in model_list:
 		print("beginning prediction for model :",c)
+
+        model = load_model(model_name) #loads model from disk
 		probas = np.array(model.predict(x))
-		booleans = probas >= proba_threshold 
+		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
 		to_append = []
 		for boolean in booleans:
@@ -427,7 +447,7 @@ def main():
 	classes_source = ['dog','truck']
 	classes_target = ['deer','horse']
 	num_of_classes = len(classes_source)
-	
+
 	batch_size_source = 10
 	transformation_ratio = .05
 	originalSize = 32
@@ -435,7 +455,7 @@ def main():
 	path_to_train = path + "train"
 	path_to_validation = path + "validation"
 	path_to_test = path + "test"
-	
+
 	path_to_best_top_model = "best_top_model.hdf5"
 
 	trainNum_source = 7950
@@ -444,7 +464,7 @@ def main():
 	trainNum_target = 8010
 	valNum_target = 1980
 	testNum_target = 1980
-	
+
 	lr_source = 0.0001
 	epochs_source = 50
 
@@ -463,7 +483,7 @@ def main():
 	top_model = top_layer_builder(lr_source,num_of_classes)
 	top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
 	top_model_init = top_layer_builder(lr_source,num_of_classes)
-	full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)  
+	full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
 	# full_model_score = full_model.evaluate_generator(test_generator_source)
 	# print(full_model_score)
 
@@ -510,6 +530,6 @@ def main():
 
 	# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 	print(accuracy(y_test_target,predicted_classes))
-	
+
 if __name__ == '__main__':
 	main()
