@@ -2,13 +2,13 @@
 # @Author: romaingautronapt
 # @Date:   2018-01-15 14:59:20
 # @Last modified by:   Luc Blassel
-# @Last modified time: 2018-01-28T15:57:45+01:00
+# @Last modified time: 2018-01-28T17:23:09+01:00
 """
 inspired by https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
 """
 import numpy as np
 import time
-import os
+import os.path
 from binariser import *
 from dataProcessing import *
 from keras import applications
@@ -334,7 +334,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 
 	for time in range(times):
 
-		current_model_path = os.join(models_path,"model_"+str(c)+"h5")
+		current_model_path = os.path.join(models_path,"model_"+str(c)+"h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,train_boost_indexes)
