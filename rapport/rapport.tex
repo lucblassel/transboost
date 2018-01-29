@@ -46,8 +46,32 @@
 
 \section{Approche}
 \subsection{idee generale}
-\includegraphics[width=\textwidth]{fig2.pdf}
-\includegraphics[width=\textwidth]{fig1.pdf}
+\begin{figure}
+  \includegraphics[width=\textwidth]{fig2.pdf}
+  \caption{Differences entre l'approche classique et l'approche TransBoost}
+  \label{figDiff}
+\end{figure}
+
+
+\paragraph{}Contrairement a l’apprentissage par transfert “classique”  il ne s’agit pas ici d’adapter l'hypothèse source au domaine cible, comme ce que l’on peut voir sur la première partie du schéma. Il faut donc projeter les points du domaine cible sur le domaine source avec une bonne précision pour que la séparatrice du classificateur source puisse différencier les images du domaine cible.\\
+Cette méthode s’effectue de la manière suivante:\\ \medskip
+\begin{itemize}
+  \item on ajuste un CNN pre-entraine sur notre domaine source (avec 2 classes d’images) pour obtenir l'hypothèse source
+  \item on gèle les n dernières couches du modèle et on ré-initialise les poids des premières couches
+  \item on re-entraine le modèle partiellement gelé pour obtenir un projecteur/ classificateur.
+\end{itemize}
+
+\paragraph{}Dans le cas du boosting on effectue cette dernière étape de multiples fois pour obtenir des projecteurs faibles.
+
+\paragraph{}Vu que les CNN disponibles ont souvent plus que deux classes de sortie, il est nécessaire de changer la couche de sortie du réseau et de l’entrainer pour l’ajuster a notre domaine source (binaire). Pour économiser du temps de calcul nous calculons les valeurs de transferts pour tous les points des jeux d’entrainement, de test et de validation du domaine source pour le réseau sans derniere couche. Ces valeurs de transferts sont alors utilisées pour entraîner la dernière couche séparément du réseau. Le réseau et la dernière couche sont alors unifiés pour former notre modèle source.
+
+\paragraph{}Ce schema resume les etapes lors de l'application de cette methode:\\ \medskip
+
+\begin{figure}
+  \includegraphics[width=\textwidth]{fig1.pdf}
+  \caption{Deroulement de la methode TransBoost dans le cadre de ce projet}
+  \label{figRes}
+\end{figure}
 
 \subsection{presentation des donnees}
 \paragraph{}Nous avons choisis le data set CIFAR-10 composé d’images RGB 32x32. Celui-ci est composé de 60000 images se ventilant en 10 classes (avion,automobile,oiseau,chat,cerf,chien,grenouille,cheval,bateau,camion). Les motivations pour ce choix sont :\\ \medskip
@@ -131,15 +155,6 @@ A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seu
 \subsubsection{influence du nombre de projecteurs}
 \subsubsection{influence du nombre de blocs entraines}
 \paragraph{}Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vite le seuil de précision
-
-
-
-
-
-
-
-
-
 
 
 
