@@ -1,5 +1,9 @@
 \documentclass[11 pt]{article}
 
+\usepackage{natbib}
+\usepackage[nottoc]{tocbibind}
+\bibliographystyle{abbrvnat}
+
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[french]{babel}
@@ -39,7 +43,7 @@
 
 \paragraph{}L’apprentissage par transfert nous permet de transférer des connaissances apprises depuis domaine source avec idéalement une grande quantité de données étiquetées de bonne qualité, vers un domaine cible. Cette approche permet de réutiliser des portions d’un modèle préalablement entrainé dans notre nouveau modèle. L'avantage est double : économie en temps de calcul et utilisation d'une quantité limitée de données en réinvestissant de l'information provenant d'une autre tâche. Cette méthode est considérée comme le prochain moteur de succès de l’apprentissage automatique après l’apprentissage supervisé.
 
-\paragraph{}La méthode TransBoost, introduite par Antoine Cornuéjols et ses collègues propose une implémentation de l’apprentissage par transfert différente de l'usage. Quand l’approche “classique” de l’apprentissage par transfert adapte l'hypothèse développée sur le domaine source au domaine cible, TransBoost en prend le contre-pied. En effet dans cette dernière on apprend l'hypothèse sur le domaine source et on projette ensuite les points du domaine cible sur le domaine source pour utiliser directement l'hypothèse source sur les points projetés. 
+\paragraph{}La méthode TransBoost \cite{transboost}, introduite par Antoine Cornuéjols et ses collègues propose une implémentation de l’apprentissage par transfert différente de l'usage. Quand l’approche “classique” de l’apprentissage par transfert adapte l'hypothèse développée sur le domaine source au domaine cible, TransBoost en prend le contre-pied. En effet dans cette dernière on apprend l'hypothèse sur le domaine source et on projette ensuite les points du domaine cible sur le domaine source pour utiliser directement l'hypothèse source sur les points projetés.
 
 \paragraph{}Ainsi, on n'apprend pas de nouvelles frontière entre les points, on injecte plutôt les points des bons côtés des frontières source. La projection des points du domaine cible sur le domaine source se fait dans le cadre d'un algorithme de boosting, qui grâce à plusieurs projecteurs faibles, permet d’obtenir un projecteur fort. Ce dernier permet alors d’utiliser l'hypothèse source pour classifier les points du domaine cible. La différence d'approche entre apprentissage par transfert ``usuel'' et Transboost est illustrée sur le schéma ~\ref{figDiff}.
 
@@ -52,23 +56,23 @@
   \label{figDiff}
 \end{figure}
 
-\section{Tranboost pour la classification d'images : principe}
+\section{Transboost pour la classification d'images : principe}
 
-\paragraph{}L’application de la méthode TransBoost à la classification d’images oblige à se poser plusieurs questions. D’une part la très grande dimensionnalité des images force a utiliser des méthodes très lourdes telles que les réseaux de convolution profonds, c'est donc un défi en terme de puissance de calcul. D’autre part comment réaliser la projection des points du domaine cible dans le cas d'images ?  
+\paragraph{}L’application de la méthode TransBoost à la classification d’images oblige à se poser plusieurs questions. D’une part la très grande dimensionnalité des images force a utiliser des méthodes très lourdes telles que les réseaux de convolution profonds, c'est donc un défi en terme de puissance de calcul. D’autre part comment réaliser la projection des points du domaine cible dans le cas d'images ?
 
-% D'autre part, il existe dans les librairies de machine learning telles que TensorFlow des réseaux pré-entraînés, mais quel modèle choisir, pourquoi? 
+% D'autre part, il existe dans les librairies de machine learning telles que \texttt{Tensor Flow} des réseaux pré-entraînés, mais quel modèle choisir, pourquoi?
 % \paragraph{}Contrairement a l’apprentissage par transfert “classique”  il ne s’agit pas ici d’adapter l'hypothèse source au domaine cible, comme ce que l’on peut voir sur la première partie du schéma. Il faut donc projeter les points du domaine cible sur le domaine source avec une bonne précision pour que la séparatrice du classificateur source puisse différencier les images du domaine cible.\\
 
-\paragraph{} Le choix a été fait de modifier les premières couches du réseau ``source'' pour classifier les images du domaine cible. Ainsi, les premières couches du réseau existant se chargeront de trouver les bons descripteurs de faible niveau pour que la nouvelle tâche puisse être réalisée. Cependant il faudra trouver les meilleurs hyper-paramètres de ces projecteurs (voir infra). 
+\paragraph{} Le choix a été fait de modifier les premières couches du réseau ``source'' pour classifier les images du domaine cible. Ainsi, les premières couches du réseau existant se chargeront de trouver les bons descripteurs de faible niveau pour que la nouvelle tâche puisse être réalisée. Cependant il faudra trouver les meilleurs hyper-paramètres de ces projecteurs (voir infra).
 
-\paragraph{} On aurait pu également construire une réseau externe qui se charge d'être le projecteur des images et qui arrive en entrée du réseau ``source''. Celui-ci aurait eu en entrée des images et en sortie également des images (visualisation intéressante). A noter que cette option aurait été plus lourde en calculs (backpropagation supplémentaire) et ne sera pas explorée ici. 
+\paragraph{} On aurait pu également construire une réseau externe qui se charge d'être le projecteur des images et qui arrive en entrée du réseau ``source''. Celui-ci aurait eu en entrée des images et en sortie également des images (visualisation intéressante). A noter que cette option aurait été plus lourde en calculs (backpropagation supplémentaire) et ne sera pas explorée ici.
 
 \pagebreak
 
 \begin{samepage}
 La construction d'un projecteur s'effectue comme suit : \medskip
   \begin{itemize}
-    \item On obtient un réseau convolutionnel très performant sur une classification binaire source et aussi bon que le hasard pour une classification binaire cible. Les modèles pré-entraînés disponibles ont souvent un grand nombre de classes de sortie. Il est nécessaire de changer la couche de sortie du réseau et de l’entraîner pour l’ajuster à notre domaine source binaire. 
+    \item On obtient un réseau convolutionnel très performant sur une classification binaire source et aussi bon que le hasard pour une classification binaire cible. Les modèles pré-entraînés disponibles ont souvent un grand nombre de classes de sortie. Il est nécessaire de changer la couche de sortie du réseau et de l’entraîner pour l’ajuster à notre domaine source binaire.
     \nopagebreak
     \item On gèle la partie supérieur dudit réseau en laissant les premières couches entraînables.
     \nopagebreak
@@ -80,7 +84,7 @@ On construit itérativement un ensemble de projecteurs faibles spécialisés sur
 
 \section{Application}
 
-Dans toutes cette section, la figure~\ref{figRes} illustrera les propos.
+Dans toute cette section, la figure~\ref{figRes} illustrera les propos.
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{fig1.pdf}
@@ -103,7 +107,7 @@ Dans toutes cette section, la figure~\ref{figRes} illustrera les propos.
 
 
 \subsection{Construction d'un classifieur binaire fort sur le domaine source}
-\paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classifieur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). Keras offre de nombreuses possibilités de modèles (voir \href{https://keras.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
+\paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classifieur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). \texttt{Keras} offre de nombreuses possibilités de modèles (voir \href{https://\texttt{Keras}.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
 
 \paragraph{}Par soucis de parcimonie en temps de calcul, on fait passer l’ensemble des sets d’images dans le modèle de base une seule fois. On génère ainsi les valeurs de transfert qui serviront à l’entraînement de la dernière couche. \\
 L’architecture de la dernière couche (plus exactement du dernier bloc) est :\\ \medskip
@@ -121,7 +125,7 @@ L’architecture de la dernière couche (plus exactement du dernier bloc) est :\
   \end{itemize}
 \end{samepage}
 
-\medskip 
+\medskip
 
 \paragraph{}Le choix de l'architecture s’est fait de manière empirique.\\
 
@@ -143,11 +147,11 @@ Trois paramètres importants sont à chercher selon un compromis performances/co
   \item le nombre de projecteurs faibles entraînés
 \end{itemize}
 
-\paragraph{}La suite est celle de l’algorithme Adaboost (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
+\paragraph{}La suite est celle de l’algorithme Adaboost\cite{boosting} (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
 
 A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seuil de précision est atteint (avec une limite d’un grand nombre d’epochs).
 
-\pagebreak 
+\pagebreak
 
 \begin{algorithm}[H]
   \SetAlCapSkip{10ex}
@@ -181,9 +185,9 @@ A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seu
 \end{algorithm}
 
 \subsection{Difficultés rencontrées}
-\paragraph{}Nous avons fait la décision initiale de travailler dans un environnement purement Tensor Flow, puisque le modèle que nous avions choisi était disponible dans cette librairie. Cependant dès qu’il a été temps de modifier la structure du modèle (pour avoir une couche de sortie binaire par exemple) ou qu’il a fallu geler l'entraînement de certaines couches l’utilisation de Tensor Flow est devenue très compliquée. En effet l’objet du modèle était introuvable et il fallait modifier un graphe ce qui nous a posé beaucoup de problèmes. C’est pour cela que nous avons décidé d’utiliser la librairie Keras qui fonctionne comme surcouche de Tensor Flow ce qui nous a permis d’utiliser les modèles disponible dans Tensor Flow mais en ayant des outils et une syntaxe plus claire et plus simple d’utilisation, permettant des temps de développement beaucoup plus courts.
+\paragraph{}Nous avons fait la décision initiale de travailler dans un environnement purement \texttt{Tensor Flow}, puisque le modèle que nous avions choisi était disponible dans cette librairie. Cependant dès qu’il a été temps de modifier la structure du modèle (pour avoir une couche de sortie binaire par exemple) ou qu’il a fallu geler l'entraînement de certaines couches l’utilisation de \texttt{Tensor Flow} est devenue très compliquée. En effet l’objet du modèle était introuvable et il fallait modifier un graphe ce qui nous a posé beaucoup de problèmes. C’est pour cela que nous avons décidé d’utiliser la librairie \texttt{Keras} qui fonctionne comme surcouche de \texttt{Tensor Flow} ce qui nous a permis d’utiliser les modèles disponible dans \texttt{Tensor Flow} mais en ayant des outils et une syntaxe plus claire et plus simple d’utilisation, permettant des temps de développement beaucoup plus courts.
 
-\paragraph{}Nous avons aussi rencontré beaucoup de problèmes de ressources machine, puisque les machines physiques et virtuelles auxquelles nous avions accès présentaient des performances limitées. Ceci a engendré des temps d'exécution se comptant en dizaine d’heures et même en jours dans certains cas et aboutissant souvent a des erreurs de mémoire. Il est donc nécessaire d’avoir accès à une machine performante qui nous permettra débugger le programme et le perfectionner sans attendre des périodes très longues. 
+\paragraph{}Nous avons aussi rencontré beaucoup de problèmes de ressources machine, puisque les machines physiques et virtuelles auxquelles nous avions accès présentaient des performances limitées. Ceci a engendré des temps d'exécution se comptant en dizaine d’heures et même en jours dans certains cas et aboutissant souvent a des erreurs de mémoire. Il est donc nécessaire d’avoir accès à une machine performante qui nous permettra débugger le programme et le perfectionner sans attendre des périodes très longues.
 
 \section{Comparaisons critiques portant sur la méthode transboost}
 \subsection{Projecteurs faibles vs. projecteurs forts}
@@ -227,6 +231,26 @@ Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vit
 \subsubsection{Projecteurs vs. nouveaux classifieurs}
 
 \pagebreak
+
+\bibliography{biblio}
+% \begin{thebibliography}{99}
+%   \bibitem{boosting}
+%     Yoav Freund and Robert E. Schapire,
+%     A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting,
+%     Journal of computer and system sciences(55) 119-139,
+%     1997
+%
+%   \bibitem{transboost}
+%     {Cornuejols A. , Akkoyunlu S. , Murena P.A., Olivier R.},
+%     Transfer Learning by boosting projections from the target domain to the source domain
+%
+%   \bibitem{keras}
+%     Chollet F.,
+%     Building powerful image classification models using very little data,
+%     \href{\url{https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html}},
+%     2016
+%
+% \end{thebibliography}
 
 \begin{appendices}
   \section{Code}
