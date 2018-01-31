@@ -79,7 +79,7 @@ La construction d'un projecteur s'effectue comme suit : \medskip
   \end{itemize}
 \end{samepage}
 
-On construit itérativement un ensemble de projecteurs faibles spécialisés sur les erreurs des précédents selon l'algorithme Adaboost (\begin{huge} citation à mettre \end{huge}). Notre hypothèse finale sur le domaine cible sera une combinaison de ces projecteurs faibles.
+On construit itérativement un ensemble de projecteurs faibles spécialisés sur les erreurs des précédents selon l'algorithme Adaboost \cite{boosting}. Notre hypothèse finale sur le domaine cible sera une combinaison de ces projecteurs faibles.
 
 \section{Application}
 
@@ -146,7 +146,7 @@ Trois paramètres importants sont à chercher selon un compromis performances/co
   \item le nombre de projecteurs faibles entraînés
 \end{itemize}
 
-\paragraph{}La suite est celle de l’algorithme Adaboost\cite{boosting} (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
+\paragraph{}La suite est celle de l’algorithme Adaboost (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
 
 A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seuil de précision est atteint (avec une limite d’un grand nombre d’epochs).
 
@@ -228,7 +228,9 @@ Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vit
 \subsection{Comparaisons critiques de l'algorithme Transboost}
 \subsubsection{Projecteurs faibles vs. projecteurs forts}
 \subsubsection{Projecteurs vs. nouveaux classifieurs}
+\paragraph{}
 
+\bigskip
 \nocite{*}
 \bibliographystyle{plain}
 \bibliography{biblio.bib}
@@ -244,6 +246,25 @@ Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vit
     \caption{schema du programme}
     \label{figTot}
   \end{figure}
+  \paragraph{}Descriptif des fonctions:\\
+
+  \begin{description}
+    \item[Batch\_loader:] Prend les images d'un batch de CIFAR-10 et les enregistre dans un dictionnaire avec comme clé la classe de l'image.
+    \item[Sep\_saver:] Parcourt le dictionnaire et enregistre les images de chaque classe dans un dossier correspondant.
+    \item[Downloader:] Télécharge les batches de CIFAR-10 et exécute les deux fonctions précédentes pour chaque batch d'entrainement, de test et de validation.
+    \item[Create\_generator:]
+    \item[Bottom\_layer\_builder:] Charge et construit le modèle sans derniere couche (Xception dans ce cas).
+    \item[Create\_bottleneck\_features:] Calcule les valeurs de transfert pour chaque image des jeux d'entrainement, de test et de validation passant par le modèle issu de la fonction précédente.
+    \item[Top\_layer\_builder:] Construit la couche de sortie binaire.
+    \item[Top\_layer\_trainer:] Entraine la dernière couche avec les valeurs de transfert.
+    \item[Full\_model\_builder:] Assemble le modèle sans derniere couche et la dernière couche nouvellement entraînée.
+    \item[First\_modified\_layers\_model\_builder:] Gèle les poids des $n$ dernières couches pour effectuer le boosting.
+    \item[First\_modified\_layers\_model\_trainer:] Entraine le modèle partiellement gelé sur le jeu d'entrainement.
+    \item[Callback\_boosting:] est appelé à chaque epoch de l'entrainement du modèle et si la précision est supérieure à un seuil $\alpha$ arrête l'entraînement.
+    \item[Booster:] Applique l'algorithme adaboost au réseau. chaque modèle entraîne faisant office de projecteur faible est construit puis entraîne en appelant les deux fonctions précédentes $n$ fois.
+    \item[Prediction\_boosting:] Effectue un e prédiction sur la classe de l'image présentée en prenant en compte les modèles entraînés dans la fonction précédente.
+    \item[Accuracy:] Évalue la précision des prédictions.
+  \end{description}
 \end{appendices}
 
 \end{document}
