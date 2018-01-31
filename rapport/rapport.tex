@@ -10,16 +10,16 @@
 \usepackage{tikz-qtree}
 \usepackage{listings}
 \usepackage{graphicx}
-
+\usepackage{algorithm2e}
 \usepackage[left=2cm,right=2cm,top=1.5cm,bottom=1.5cm]{geometry}
-
+\usepackage[toc,page]{appendix}
 \usepackage{hyperref}
 \hypersetup{
-    colorlinks,
-    citecolor=black,
-    filecolor=black,
-    linkcolor=black,
-    urlcolor=black
+  colorlinks,
+  citecolor=black,
+  filecolor=black,
+  linkcolor=black,
+  urlcolor=black
 }
 
 \title{Projet Transboost}
@@ -119,7 +119,35 @@ Trois paramètres importants sont à chercher selon un compromis performances/co
 \paragraph{}La suite est celle de l’algorithme Adaboost. A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ledit set d’entraînement.\\
 A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seuil de précision est atteint (avec une limite d’un grand nombre d’epochs).
 
+\begin{algorithm}
+  \SetAlCapSkip{10ex}
+  \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+  \SetKw{Init}{Initialisation:}
+  \Input{$\mathcal{X_S}\rightarrow\mathcal{Y_S}$ :  l'hypothese source\\
+          $\mathcal{S_T = \{(X_i^T,Y_I^T)\}}_{1\leq i\leq m}$ : l'ensemble d'entrainement cible}
+  \Init{} de la distribution sur le jeu d'entrainement:$D_1(i)=1/m\ for\ i=1,\cdots,m$\;
+  \For{$n=1,\cdots,N$}{
+    Trouver une projection $\pi_i:\mathcal{X_T\rightarrow X_S}$ tq. $h_S(\pi_i(.))$ soit meilleure que le hasard sur $D_n(\mathcal{S_T})$\;
+    Soit $\epsilon_n$ le taux d'erreur de $h_S(\pi_i(.))$ sur $D_n(\mathcal{S_T})$: $\epsilon_n = P_{i~D_n}[h_S(\pi_n(x_i))\neq y_i]$(avec $\epsilon_n<0.5$)\;
+    Calculer $\alpha_i=\frac{1}{2}log_2(\frac{1-\epsilon_i}{\epsilon_i})$\;
+    Mettre a jour: \For{$i=1,\cdots,m$}{
+        \begin{equation*}
+          \begin{split}
+            D_{n+1}(i) & = \frac{D_n(i)}{Z_n}\times\begin{cases}
+              e^{-\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))=y_i^{\mathcal{T}} \\
+              e^{\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))\neq y_i^{\mathcal{T}}
+            \end{cases}\\
+            & = \frac{D_n(i)exp(-\alpha_n y_i^{(\mathcal{T})}h_{\mathcal{S}}(\pi_n(x^{(\mathcal{T})})))}{Z_n}
+          \end{split}
+        \end{equation*}
+        Ou $Z_n$ est un facteur de normalisation tq. $D_{n+1}$ soit une distribution de $\mathcal{S_T}$\;
+    }
+  }
+  \Output{L'hypothese finale $H_{\mathcal{T}}:\mathcal{X_T \rightarrow Y_T}$:\\
+            $ H_{\mathcal{T}}(x_{\mathcal{T}})=signe\{\sum\limits_{n=1}^N \alpha_n h_{\mathcal{S}}(\pi_n(x^{\mathcal{T}}))\}$}
 
+  \caption{Algorithme Transboost}
+\end{algorithm}
 
 \subsection{Comparaisons critiques portant sur la methode transboost}
 \subsubsection{Projecteurs faibles vs. projecteurs forts}
@@ -150,12 +178,28 @@ A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seu
 \subsection{Influence des domaines source et cible}
 \paragraph{}Peut t-on partir d’un domaine source simple (ex : “dog/truck”) pour aller vers un domaine cible plus compliqué (ex:”deer/horse”) ?
 
+\paragraph{}Bien sur dans les temps venant il faudra tester les critiques soulevees plus haut, en comparant les performances des projecteurs faibles contre un projecteur fort, et la performance de ces projecteurs par rapport a celle d'un classificateur nouvellement entraine.
+
+
 \subsection{Influence des hyperparametres: recherche d'un optimum precision/cout calculatoire}
 \subsubsection{influence de la force des projecteurs}
 \subsubsection{influence du nombre de projecteurs}
 \subsubsection{influence du nombre de blocs entraines}
 \paragraph{}Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vite le seuil de précision
 
+\begin{appendices}
+  \chapter{}
+    \paragraph{}\emph{lien: }\href{https://gitlab.com/zlanderous/transboost}{Code sur gitlab.}
+    \newpage
 
+
+  \chapter{Schema du programme}
+  \begin{figure}[h]
+    \includegraphics[width=\textwidth]{figTot.pdf}
+    \caption{schema du programme}
+    \label{figTot}
+  \end{figure}
+
+\end{appendices}
 
 \end{document}
