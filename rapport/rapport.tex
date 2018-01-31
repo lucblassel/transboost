@@ -165,7 +165,10 @@ A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seu
 
 
 \subsection{Difficultes rencontrees}
-\paragraph{}Keras, CPU, GPU etc\ldots
+\paragraph{}Nous avons fait la décision initiale de travailler dans un environnement purement Tensor Flow, puisque le modèle que nous avions choisi était disponible dans cette librairie. Cependant dès qu’il a ete temps de modifier la structure du modèle (pour avoir une couche de sortie binaire par exemple) ou qu’il a fallu geler l'entraînement de certaines couches l’utilisation de Tensor Flow est devenue tres compliquee. En effet l’objet du modele etait introuvable et il fallait modifier un graphe ce qui nous a posé beaucoup de problèmes. C’est pour cela que nous avons décidé d’utiliser la librairie keras qui fonctionne comme surcouche de Tensor Flow ce qui nous a permis d’utiliser les modèles disponible dans Tensor Flow mais en ayant des outils et une syntaxe plus claire et plus simple d’utilisation, permettant des temps de développement beaucoup plus courts.
+
+\paragraph{}Nous avons aussi rencontré beaucoup de problèmes de ressources machine, puisque les machines physiques et virtuelles auxquelles nous avions accès présentaient des performances limitées. Ceci a engendré des temps d'exécution se comptant en dizaine d’heures et même en jours dans certains cas et aboutissant souvent a des erreurs de mémoire. Il est donc nécessaire d’avoir accès à une machine performante qui nous permettra debugger le programme et le perfectionner sans attendre des periodes tres longues. 
+
 
 \section{Resultats}
 \subsection{Construction du classifieur binaire}
