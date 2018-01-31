@@ -2,7 +2,6 @@
 
 \usepackage{natbib}
 \usepackage[nottoc]{tocbibind}
-\bibliographystyle{abbrvnat}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -45,7 +44,7 @@
 
 \paragraph{}La méthode TransBoost \cite{transboost}, introduite par Antoine Cornuéjols et ses collègues propose une implémentation de l’apprentissage par transfert différente de l'usage. Quand l’approche “classique” de l’apprentissage par transfert adapte l'hypothèse développée sur le domaine source au domaine cible, TransBoost en prend le contre-pied. En effet dans cette dernière on apprend l'hypothèse sur le domaine source et on projette ensuite les points du domaine cible sur le domaine source pour utiliser directement l'hypothèse source sur les points projetés.
 
-\paragraph{}Ainsi, on n'apprend pas de nouvelles frontière entre les points, on injecte plutôt les points des bons côtés des frontières source. La projection des points du domaine cible sur le domaine source se fait dans le cadre d'un algorithme de boosting, qui grâce à plusieurs projecteurs faibles, permet d’obtenir un projecteur fort. Ce dernier permet alors d’utiliser l'hypothèse source pour classifier les points du domaine cible. La différence d'approche entre apprentissage par transfert ``usuel'' et Transboost est illustrée sur le schéma ~\ref{figDiff}.
+\paragraph{}Ainsi, on n'apprend pas de nouvelles frontière entre les points, on injecte plutôt les points des bons côtés des frontières source. La projection des points du domaine cible sur le domaine source se fait dans le cadre d'un algorithme de boosting, qui grâce à plusieurs projecteurs faibles, permet d’obtenir un projecteur fort. Ce dernier permet alors d’utiliser l'hypothèse source pour classifier les points du domaine cible. La différence d'approche entre apprentissage par transfert "usuel" et Transboost est illustrée sur le schéma ~\ref{figDiff}.
 
 
 \paragraph{}L'approche Transboost a d’abord été testée sur la classification des séries temporelles incomplètes et à été un franc succès en ayant de bien meilleures performances que d’autres approches du même problème. Cependant, la classification d’images étant le mètre étalon en ce moment, le but de ce projet est d’adapter la méthode TransBoost à la classification d’images en utilisant des réseaux de convolution profonds (deep CNN). Ce travail ne présente que la classification binaire d'images.
@@ -63,9 +62,9 @@
 % D'autre part, il existe dans les librairies de machine learning telles que \texttt{Tensor Flow} des réseaux pré-entraînés, mais quel modèle choisir, pourquoi?
 % \paragraph{}Contrairement a l’apprentissage par transfert “classique”  il ne s’agit pas ici d’adapter l'hypothèse source au domaine cible, comme ce que l’on peut voir sur la première partie du schéma. Il faut donc projeter les points du domaine cible sur le domaine source avec une bonne précision pour que la séparatrice du classificateur source puisse différencier les images du domaine cible.\\
 
-\paragraph{} Le choix a été fait de modifier les premières couches du réseau ``source'' pour classifier les images du domaine cible. Ainsi, les premières couches du réseau existant se chargeront de trouver les bons descripteurs de faible niveau pour que la nouvelle tâche puisse être réalisée. Cependant il faudra trouver les meilleurs hyper-paramètres de ces projecteurs (voir infra).
+\paragraph{} Le choix a été fait de modifier les premières couches du réseau "source" pour classifier les images du domaine cible. Ainsi, les premières couches du réseau existant se chargeront de trouver les bons descripteurs de faible niveau pour que la nouvelle tâche puisse être réalisée. Cependant il faudra trouver les meilleurs hyper-paramètres de ces projecteurs (voir infra).
 
-\paragraph{} On aurait pu également construire une réseau externe qui se charge d'être le projecteur des images et qui arrive en entrée du réseau ``source''. Celui-ci aurait eu en entrée des images et en sortie également des images (visualisation intéressante). A noter que cette option aurait été plus lourde en calculs (backpropagation supplémentaire) et ne sera pas explorée ici.
+\paragraph{} On aurait pu également construire une réseau externe qui se charge d'être le projecteur des images et qui arrive en entrée du réseau "source". Celui-ci aurait eu en entrée des images et en sortie également des images (visualisation intéressante). A noter que cette option aurait été plus lourde en calculs (backpropagation supplémentaire) et ne sera pas explorée ici.
 
 \pagebreak
 
@@ -107,7 +106,7 @@ Dans toute cette section, la figure~\ref{figRes} illustrera les propos.
 
 
 \subsection{Construction d'un classifieur binaire fort sur le domaine source}
-\paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classifieur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). \texttt{Keras} offre de nombreuses possibilités de modèles (voir \href{https://\texttt{Keras}.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
+\paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classifieur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). \texttt{Keras} offre de nombreuses possibilités de modèles (voir \href{https://keras.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
 
 \paragraph{}Par soucis de parcimonie en temps de calcul, on fait passer l’ensemble des sets d’images dans le modèle de base une seule fois. On génère ainsi les valeurs de transfert qui serviront à l’entraînement de la dernière couche. \\
 L’architecture de la dernière couche (plus exactement du dernier bloc) est :\\ \medskip
@@ -230,28 +229,11 @@ Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vit
 \subsubsection{Projecteurs faibles vs. projecteurs forts}
 \subsubsection{Projecteurs vs. nouveaux classifieurs}
 
+\nocite{*}
+\bibliographystyle{plain}
+\bibliography{biblio.bib}
+
 \pagebreak
-
-\bibliography{biblio}
-% \begin{thebibliography}{99}
-%   \bibitem{boosting}
-%     Yoav Freund and Robert E. Schapire,
-%     A Decision-Theoretic Generalization of On-Line Learning and an Application to Boosting,
-%     Journal of computer and system sciences(55) 119-139,
-%     1997
-%
-%   \bibitem{transboost}
-%     {Cornuejols A. , Akkoyunlu S. , Murena P.A., Olivier R.},
-%     Transfer Learning by boosting projections from the target domain to the source domain
-%
-%   \bibitem{keras}
-%     Chollet F.,
-%     Building powerful image classification models using very little data,
-%     \href{\url{https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html}},
-%     2016
-%
-% \end{thebibliography}
-
 \begin{appendices}
   \section{Code}
     \href{https://gitlab.com/zlanderous/transboost}{Code sur gitlab.}
