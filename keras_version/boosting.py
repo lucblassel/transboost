@@ -29,6 +29,7 @@ from itertools import chain
 
 downloader(url,path)
 models_path = "models"
+models_weights_path = "models_weights"
 
 # checks if models directory already exists, and iuf not creates it
 
@@ -39,7 +40,7 @@ if not os.path.exists(dataPath):
 
 
 #####################################
-# BUILDING MODEL FOR TWO CLASSES    #
+# BUILDING MODEL FOR TWO CLASSES	#
 #####################################
 
 def bottom_layers_builder(originalSize,resizeFactor):
@@ -182,7 +183,7 @@ def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
 
 
 ############################################################################
-# TRAINING FIRST LAYERS                                                    #
+# TRAINING FIRST LAYERS													#
 ############################################################################
 
 def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers ):
@@ -213,6 +214,20 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 		layer.trainable = False
 
 	return model_copy
+
+def first_layers_reinitializer(model,layerLimit):
+	"""
+	re-initializes weights of layers up to layerLimit
+	"""
+
+	for layer in model.layers[:layerLimit]:
+		session = k.get_session()
+		for v in layer.__dict__:
+			v_arg = getattr(layer,v)
+			if hasattr(v_arg,'initializer'):
+				initializer_method = getattr(v_arg,'initializer')
+				initializer_method.run(session=session)
+				print('reinitializing layer {}.{}'.format(layer.name, v))
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
 	"""
@@ -303,8 +318,20 @@ def from_generator_to_array(classes,path_to_train,path_to_validation,originalSiz
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
 
+def trainedWeightSaver(model,layerLimit,modelName):
+	"""
+	luc blassel
+	saves weights of layers up to layerLimit to modelName file
+	"""
+	model_copy = Sequential()
+	for layer in model.layers[:layerLimit]:
+		model_copy.add(layer)
+
+	model_copy.save_weights(modelName)
+	del model_copy
+
 #######################################################
-#                BOOSTING                             #
+#				BOOSTING							 #
 #######################################################
 def take(tab,indexes):
 	output = np.zeros(tab.shape)
@@ -326,6 +353,8 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	alpha_list = []
 	c = 1
 
+	current_model = cp.deepcopy(full_model)
+
 	if train_length==0:
 		raise NameError("length of training set equals 0")
 
@@ -334,21 +363,22 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 
 	for time in range(times):
 
-		current_model_path = os.path.join(models_path,"model_"+str(c)+"h5")
+		current_model_path = os.path.join(models_weights_path,"model_"+str(c)+"h5")
+		c += 1
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,train_boost_indexes)
 		y_train_boost = take(y_train,train_boost_indexes)
 
 		if bigNet :
-			current_model = first_layers_modified_model_builder(full_model,layerLimit)
+			current_model = first_layers_reinitializer(current_model,layerLimit)
 		else :
 			current_model = small_net_builder(originalSize,resizeFactor,lr)
 
 		error = 0
 		while error == 1 or error == 0 :
 			if bigNet :
-				current_model = first_layers_modified_model_builder(full_model,layerLimit)
+				current_model = first_layers_reinitializer(current_model, layerLimit)
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr)
 
@@ -361,9 +391,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 		# model_list.append(current_model)
 
 		model_list.append(current_model_path) #adds model path to list
-		current_model.save(current_model_path) #saves model to disk
-
-		del current_model #frees up memory space
+		trainedWeightSaver(current_model,current_model_path)
 
 		alpha_list.append(alpha)
 
