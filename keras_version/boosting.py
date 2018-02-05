@@ -335,7 +335,6 @@ def trainedWeightSaver(model,layerLimit,modelName):
 #######################################################
 def take(tab,indexes):
 	output = np.zeros(tab.shape)
-
 	c=0
 	for i in indexes:
 		output[c] = tab[i]
@@ -353,7 +352,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	alpha_list = []
 	c = 1
 
-	current_model = cp.deepcopy(full_model)
+	current_model = load_model('full_model.h5')
+	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
+	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
 	if train_length==0:
 		raise NameError("length of training set equals 0")
@@ -362,8 +363,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 	indexes = list(range(train_length))
 
 	for time in range(times):
-
-		current_model_path = os.path.join(models_weights_path,"model_"+str(c)+"h5")
+		print("="*50)
+		print( "boosting step number "+str(time))
+		current_model_path = os.path.join(models_weights_path,"model_"+str(c)+".h5")
 		c += 1
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
@@ -382,16 +384,16 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 
-			error = 1 - current_model.evaluate(x_val, y_val, verbose=1)[1]
+			error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
 		alpha = .5*np.log((1-error)/error)
 
 		error_list.append(error)
 		# model_list.append(current_model)
 
 		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaver(current_model,current_model_path)
+		trainedWeightSaver(current_model,layerLimit,current_model_path)
 
 		alpha_list.append(alpha)
 
@@ -413,9 +415,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 				prob[i] = prob[i]*np.exp(alpha)
 		prob = prob / np.sum(prob)
 
-	return model_list, error_list, alpha_list
+	return model_list, error_list, alpha_list, current_model
 
-def prediction_boosting(x,model_list, alpha_list,proba_threshold):
+def prediction_boosting(x,model_list, alpha_list,proba_threshold,model):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -427,7 +429,7 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold):
 	for model_name in model_list:
 		print("beginning prediction for model :",c)
 
-		model = load_model(model_name) #loads model from disk
+		model.load_weights(model_name,by_name=True) #loads model weights
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
@@ -494,7 +496,7 @@ def main():
 	testNum_target = 1980
 
 	lr_source = 0.0001
-	epochs_source = 50
+	epochs_source = 5
 
 	recompute_transfer_values = False
 	train_top_model = False
@@ -512,11 +514,12 @@ def main():
 	top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
 	top_model_init = top_layer_builder(lr_source,num_of_classes)
 	full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
+	full_model.save('full_model.h5')
 	# full_model_score = full_model.evaluate_generator(test_generator_source)
 	# print(full_model_score)
 
 	layerLimit = 15
-	epochs_target = 100
+	epochs_target = 2
 	lr_target = 0.0001
 	batch_size_target = 10
 	threshold = .65
@@ -535,7 +538,7 @@ def main():
 
 	proba_threshold = .5
 	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
-	model_list, error_list, alpha_list = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+	model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
 	# pickler = pickle.Pickler(open('alpha_list.pkl', 'wb'), -1)
 	# pickler.dump(alpha_list)
 	# print(model_list, error_list, alpha_list)
@@ -544,7 +547,7 @@ def main():
 	# 	model_path = "model"+ str(c) +".h5"
 	# 	model.save(model_path)
 	# 	c+=1
-	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold,model_returned)
 	# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
 	print(accuracy(y_test_target,predicted_classes))
 
