@@ -400,7 +400,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 		predicted_probs = current_model.predict(x_train)
 		predicted_classes = []
 
-
+		raise MemoryError #TODO REMOVE THIS, TESTING PURPOSES ONLY
 
 		for predicted_prob in predicted_probs:
 			if predicted_prob >= proba_threshold:
@@ -474,93 +474,101 @@ def accuracy(y_true,y_pred):
 def main():
 	""" this function stands for testing purposes
 	"""
-	classes_source = ['dog','truck']
-	classes_target = ['deer','horse']
-	num_of_classes = len(classes_source)
+	try:
+		classes_source = ['dog','truck']
+		classes_target = ['deer','horse']
+		num_of_classes = len(classes_source)
 
-	batch_size_source = 10
-	transformation_ratio = .05
-	originalSize = 32
-	resizeFactor = 5
-	path_to_train = path + "train"
-	path_to_validation = path + "validation"
-	path_to_test = path + "test"
+		batch_size_source = 10
+		transformation_ratio = .05
+		originalSize = 32
+		resizeFactor = 5
+		path_to_train = path + "train"
+		path_to_validation = path + "validation"
+		path_to_test = path + "test"
 
-	path_to_best_top_model = "best_top_model.hdf5"
+		path_to_best_top_model = "best_top_model.hdf5"
 
-	trainNum_source = 7950
-	valNum_source = 2040
-	testNum_source = 2040
-	trainNum_target = 8010
-	valNum_target = 1980
-	testNum_target = 1980
+		trainNum_source = 7950
+		valNum_source = 2040
+		testNum_source = 2040
+		trainNum_target = 8010
+		valNum_target = 1980
+		testNum_target = 1980
 
-	lr_source = 0.0001
-	epochs_source = 5
+		lr_source = 0.0001
+		epochs_source = 5
 
-	recompute_transfer_values = False
-	train_top_model = False
+		recompute_transfer_values = False
+		train_top_model = False
 
-	bottom_model = bottom_layers_builder(originalSize,resizeFactor)
-	train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_source,transformation_ratio)
-	pstest = pd.Series(test_generator_source.classes[:testNum_source])
-	counts = pstest.value_counts()
-	print("test classes ",counts)
-	pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
-	counts = pstrain.value_counts()
-	print("train classes ",counts)
-	save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size_source,recompute_transfer_values)
-	top_model = top_layer_builder(lr_source,num_of_classes)
-	top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
-	top_model_init = top_layer_builder(lr_source,num_of_classes)
-	full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
-	full_model.save('full_model.h5')
-	# full_model_score = full_model.evaluate_generator(test_generator_source)
-	# print(full_model_score)
+		bottom_model = bottom_layers_builder(originalSize,resizeFactor)
+		train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_source,transformation_ratio)
+		pstest = pd.Series(test_generator_source.classes[:testNum_source])
+		counts = pstest.value_counts()
+		print("test classes ",counts)
+		pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
+		counts = pstrain.value_counts()
+		print("train classes ",counts)
+		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size_source,recompute_transfer_values)
+		top_model = top_layer_builder(lr_source,num_of_classes)
+		top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
+		top_model_init = top_layer_builder(lr_source,num_of_classes)
+		full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
+		full_model.save('full_model.h5')
+		# full_model_score = full_model.evaluate_generator(test_generator_source)
+		# print(full_model_score)
 
-	layerLimit = 15
-	epochs_target = 2
-	lr_target = 0.0001
-	batch_size_target = 10
-	threshold = .65
-	reinitialize_bottom_layers = False
-	bigNet = False
-	times = 100
+		layerLimit = 15
+		epochs_target = 2
+		lr_target = 0.0001
+		batch_size_target = 10
+		threshold = .65
+		reinitialize_bottom_layers = False
+		bigNet = False
+		times = 100
 
-	# train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
-	# first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
-	# first_layers_modified_model_score = first_layers_modified_model.evaluate_generator(test_generator_target)
-	# print(first_layers_modified_model_score)
-	# first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
+		# train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
+		# first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
+		# first_layers_modified_model_score = first_layers_modified_model.evaluate_generator(test_generator_target)
+		# print(first_layers_modified_model_score)
+		# first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
-	# small_net_builder= small_net_builder(originalSize,resizeFactor,lr)
-	# first_layers_modified_model_trainer(small_net_builder,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
+		# small_net_builder= small_net_builder(originalSize,resizeFactor,lr)
+		# first_layers_modified_model_trainer(small_net_builder,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
 
-	proba_threshold = .5
-	x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
-	model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-	# pickler = pickle.Pickler(open('alpha_list.pkl', 'wb'), -1)
-	# pickler.dump(alpha_list)
-	# print(model_list, error_list, alpha_list)
-	# c = 0
-	# for model in model_list:
-	# 	model_path = "model"+ str(c) +".h5"
-	# 	model.save(model_path)
-	# 	c+=1
-	predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold,model_returned)
-	# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
-	print(accuracy(y_test_target,predicted_classes))
+		proba_threshold = .5
+		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
+		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+		# pickler = pickle.Pickler(open('alpha_list.pkl', 'wb'), -1)
+		# pickler.dump(alpha_list)
+		# print(model_list, error_list, alpha_list)
+		# c = 0
+		# for model in model_list:
+		# 	model_path = "model"+ str(c) +".h5"
+		# 	model.save(model_path)
+		# 	c+=1
+		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold,model_returned)
+		# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
+		print(accuracy(y_test_target,predicted_classes))
 
-	# model_list = []
-	# for time in range(times):
-	# 	path_model = "model"+ str(time) +".h5"
-	# 	model = load_model(path_model)
-	# 	model_list.append(model)
-	# with open('result_list.pkl', 'rb') as pickle_file:
-	# 	alpha_list = pickle.load(pickle_file)
+		# model_list = []
+		# for time in range(times):
+		# 	path_model = "model"+ str(time) +".h5"
+		# 	model = load_model(path_model)
+		# 	model_list.append(model)
+		# with open('result_list.pkl', 'rb') as pickle_file:
+		# 	alpha_list = pickle.load(pickle_file)
 
-	# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
-	print(accuracy(y_test_target,predicted_classes))
+		# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
+		print(accuracy(y_test_target,predicted_classes))
+
+	except MemoryError:
+		import gc
+		import sys
+		objects = [o for o in gc.get_objects()]
+		for o in objects:
+			print(o, sys.getsizeof(o))
 
 if __name__ == '__main__':
 	main()
