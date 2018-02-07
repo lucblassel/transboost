@@ -32,11 +32,13 @@ models_path = "models"
 models_weights_path = "models_weights"
 
 # checks if models directory already exists, and iuf not creates it
+def checkDir(dataPath):
+	if not os.path.exists(dataPath):
+		print("creating" ,dataPath, "directory")
+		os.makedirs(dataPath)
 
-dataPath = models_path
-if not os.path.exists(dataPath):
-	print("creating" ,dataPath, "directory")
-	os.makedirs(dataPath)
+checkDir(models_path)
+checkDir(models_weights_path)
 
 
 #####################################
