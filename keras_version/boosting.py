@@ -402,7 +402,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 		predicted_probs = current_model.predict(x_train)
 		predicted_classes = []
 
-		raise MemoryError #TODO REMOVE THIS, TESTING PURPOSES ONLY
+		# raise MemoryError #TODO REMOVE THIS, TESTING PURPOSES ONLY
 
 		for predicted_prob in predicted_probs:
 			if predicted_prob >= proba_threshold:
