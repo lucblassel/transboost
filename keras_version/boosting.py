@@ -499,7 +499,7 @@ def main():
 		testNum_target = 1980
 
 		lr_source = 0.0001
-		epochs_source = 5
+		epochs_source = 10
 
 		recompute_transfer_values = False
 		train_top_model = False
@@ -522,7 +522,7 @@ def main():
 		# print(full_model_score)
 
 		layerLimit = 15
-		epochs_target = 2
+		epochs_target = 50
 		lr_target = 0.0001
 		batch_size_target = 10
 		threshold = .65
