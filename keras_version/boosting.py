@@ -594,9 +594,10 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params) predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params) print(accuracy(y_test_target,predicted_classes))
+		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
+		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params)
+		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
-		print(accuracy(y_test_target,predicted_classes))
 
 	except MemoryError:
 		import gc
