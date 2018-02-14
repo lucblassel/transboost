@@ -122,7 +122,7 @@ def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 		layer.trainable = False
 	return model
 
-def create_generators(classes,path_to_train,path_to_validation,batch_size,originalSize,resizeFactor,transformation_ratio,**kwargs):
+def create_generators(path_to_train,path_to_validation,classes_source,batch_size_source,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -141,49 +141,49 @@ def create_generators(classes,path_to_train,path_to_validation,batch_size,origin
 	test_datagen = ImageDataGenerator(rescale=1. / 255)
 
 	train_generator = train_datagen.flow_from_directory(path_to_train,target_size=(img_size, img_size),
-														batch_size=batch_size,
-														classes = classes,
+														batch_size=batch_size_source,
+														classes = classes_source,
 														class_mode='binary',
 														shuffle = False)
 
 	validation_generator = validation_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
-																  classes = classes,
-																  batch_size=batch_size,
+																  classes = classes_source,
+																  batch_size=batch_size_source,
 																  class_mode='binary',
 																  shuffle = False)
 
 	test_generator = test_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
-																  classes = classes,
-																  batch_size=batch_size,
+																  classes = classes_source,
+																  batch_size=batch_size_source,
 																  class_mode='binary',
 																  shuffle = False)
 
 	return train_generator,validation_generator,test_generator
 
-def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute_transfer_values,**kwargs):
+def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size_source,recompute_transfer_values,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
 	file1 = Path('bottleneck_features_train.npy')
 	if not file1.is_file() or recompute_transfer_values:
 		print('bottleneck_features_train.npy')
-		bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size, use_multiprocessing=False, verbose=1)
+		bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
 
 	file2 = Path('bottleneck_features_val.npy')
 	if not file2.is_file() or recompute_transfer_values:
 		print('bottleneck_features_val.npy')
-		bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size, use_multiprocessing=False, verbose=1)
+		bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
 	file3 = Path('bottleneck_features_test.npy')
 	if not file3.is_file() or recompute_transfer_values:
 		print('bottleneck_features_test.npy')
-		bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
+		bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)
 
-def top_layer_builder(lr,num_of_classes,**kwargs):
+def top_layer_builder(num_of_classes,lr_source,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -196,10 +196,10 @@ def top_layer_builder(lr,num_of_classes,**kwargs):
 	model.add(Dropout(0.5))
 	model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
 	#model.compile(optimizer='rmsprop',loss='binary_crossentropy',metrics=['accuracy'])
-	model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer = optimizers.Adam(lr=lr_source,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
-def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size,lr,path_to_best_model,epochs_source,train_top_model,**kwargs):
+def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size_source,path_to_best_model,epochs_source,train_top_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -230,13 +230,13 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 		print(top_model.evaluate(test_data, test_labels, verbose=1))
 
-def full_model_builder(lr,path_to_best_top_model,bottom_model,top_model,**kwargs):
+def full_model_builder(bottom_model,top_model,lr_source,path_to_best_top_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
 	top_model.load_weights(path_to_best_top_model)
 	full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
-	full_model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+	full_model.compile(optimizer = optimizers.Adam(lr=lr_source,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 	for layer in full_model.layers:
 		layer.trainable = False
 	return full_model
@@ -299,7 +299,7 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
 	score = model.evaluate_generator(test_generator)
 	print("projector score : ", score)
 
-def small_net_builder(originalSize,resizeFactor,lr,**kwargs):
+def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -333,11 +333,11 @@ def small_net_builder(originalSize,resizeFactor,lr,**kwargs):
 	model.add(Dense(1))
 	model.add(Activation('sigmoid'))
 
-	model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+	model.compile(optimizer = optimizers.Adam(lr=lr_target,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 
 	return model
 
-def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,testNum,classes,originalSize,resizeFactor,transformation_ratio,**kwargs):
+def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,testNum,classes_target,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -357,18 +357,18 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 
 	train_generator = train_datagen.flow_from_directory(path_to_train,target_size=(img_size, img_size),
 														batch_size=trainNum,
-														classes = classes,
+														classes = classes_target,
 														class_mode='binary',
 														shuffle = False)
 
 	validation_generator = validation_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
-																  classes = classes,
+																  classes = classes_target,
 																  batch_size=valNum,
 																  class_mode='binary',
 																  shuffle = False)
 
 	test_generator = test_datagen.flow_from_directory(path_to_validation,target_size=(img_size, img_size),
-																  classes = classes,
+																  classes = classes_target,
 																  batch_size=testNum,
 																  class_mode='binary',
 																  shuffle = False)
@@ -379,7 +379,7 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
 
-def trainedWeightSaver(model,layerLimit,modelName,**kwargs):
+def trainedWeightSaver(model,layerLimit,modelName):
 	"""
 	luc blassel
 	saves weights of layers up to layerLimit to modelName file
@@ -394,7 +394,7 @@ def trainedWeightSaver(model,layerLimit,modelName,**kwargs):
 #######################################################
 #				BOOSTING							 #
 #######################################################
-def take(tab,indexes,**kwargs):
+def take(tab,indexes):
 	output = np.zeros(tab.shape)
 	c=0
 	for i in indexes:
@@ -576,23 +576,23 @@ def main():
 
 		#1st part
 		bottom_model = bottom_layers_builder(**params)
-		train_generator_source,validation_generator_source,test_generator_source = create_generators(params['classes_source'],path_to_train,path_to_validation,params['batch_size_source'],**params)
+		train_generator_source,validation_generator_source,test_generator_source = create_generators(path_to_train,path_to_validation,**params)
 		pstest = pd.Series(test_generator_source.classes[:testNum_source])
 		counts = pstest.value_counts()
 		print("test classes ",counts)
 		pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
 		counts = pstrain.value_counts()
 		print("train classes ",counts)
-		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,params['batch_size_source'],**params)
-		top_model = top_layer_builder(params['lr_source'],num_of_classes,**params)
-		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,params['batch_size_source'],params['lr_source'],**params)
-		top_model_init = top_layer_builder(params['lr_source'],num_of_classes,**params)
-		full_model = full_model_builder(params['lr_source'],bottom_model,top_model_init,**params)
+		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,**params)
+		top_model = top_layer_builder(num_of_classes,**params)
+		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,**params)
+		top_model_init = top_layer_builder(num_of_classes,**params)
+		full_model = full_model_builder(bottom_model,top_model_init,**params)
 		full_model.save('full_model.h5')
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,params['epochs_target'],params['lr_target'],**params)
+		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params)
 		print(accuracy(y_test_target,predicted_classes))
 
