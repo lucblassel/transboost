@@ -6,46 +6,105 @@
 """
 inspired by https://blog.keras.io/building-powerful-image-classification-models-using-very-little-data.html
 """
-import numpy as np
-import time
-import os.path
+
+#Project files importing
+import paramGetter as pg
 from binariser import *
 from dataProcessing import *
+from callbackBoosting import *
+from dataLoader import *
+
+#external packages importing
+import sys
+import time
+import os.path
+import numpy as np
+import pandas as pd
+import copy as cp
+import _pickle as pickle
+
+from keras import backend as k
 from keras import applications
 from keras import optimizers
 from keras.models import Sequential, Model, load_model
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
-from keras import backend as k
-from keras.preprocessing.image import ImageDataGenerator
-from  callbackBoosting import *
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-from dataLoader import *
-from pathlib import Path
+from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
-import pandas as pd
-import copy as cp
-import _pickle as pickle
+from pathlib import Path
 from itertools import chain
+from datetime import datetime
 
-downloader(url,path)
-models_path = "models"
-models_weights_path = "models_weights"
+
+def getArgs():
+    """
+    gets the parameters from config file
+    """
+    if len(sys.argv)==1:
+        print("please specify path of config file...")
+        sys.exit()
+
+    path = sys.argv[1]
+    return pg.reader(path) #dictionary with relevant parameters
 
 # checks if models directory already exists, and iuf not creates it
 def checkDir(dataPath):
 	if not os.path.exists(dataPath):
 		print("creating" ,dataPath, "directory")
 		os.makedirs(dataPath)
+	else:
+		print("directory {} exists already.".format(dataPath))
 
-checkDir(models_path)
-checkDir(models_weights_path)
+models_path = "models"
+models_weights_path = "models_weights"
 
+#1st part
+classes_source = ['dog','truck']
+classes_target = ['deer','horse']
+num_of_classes = len(classes_source)
+
+batch_size_source = 10
+transformation_ratio = .05
+originalSize = 32
+resizeFactor = 5
+
+path_to_train = path + "train"
+path_to_validation = path + "validation"
+path_to_test = path + "test"
+
+path_to_best_top_model = "best_top_model.hdf5"
+
+#TODO automatise counting of these numbers
+trainNum_source = 7950
+valNum_source = 2040
+testNum_source = 2040
+trainNum_target = 8010
+valNum_target = 1980
+testNum_target = 1980
+
+lr_source = 0.0001
+epochs_source = 10
+
+recompute_transfer_values = False
+train_top_model = False
+
+#2nd part
+layerLimit = 15
+epochs_target = 50
+lr_target = 0.0001
+batch_size_target = 10
+threshold = .65
+reinitialize_bottom_layers = False
+bigNet = False
+times = 100
+
+proba_threshold = .5
 
 #####################################
 # BUILDING MODEL FOR TWO CLASSES	#
 #####################################
 
-def bottom_layers_builder(originalSize,resizeFactor):
+def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -63,7 +122,7 @@ def bottom_layers_builder(originalSize,resizeFactor):
 		layer.trainable = False
 	return model
 
-def create_generators(classes,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size,transformation_ratio):
+def create_generators(classes,path_to_train,path_to_validation,batch_size,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -101,7 +160,7 @@ def create_generators(classes,path_to_train,path_to_validation,originalSize,resi
 
 	return train_generator,validation_generator,test_generator
 
-def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute_transfer_values):
+def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size,recompute_transfer_values,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -124,7 +183,7 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 		bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)
 
-def top_layer_builder(lr,num_of_classes):
+def top_layer_builder(lr,num_of_classes,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -140,7 +199,7 @@ def top_layer_builder(lr,num_of_classes):
 	model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
-def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,path_to_best_model):
+def top_layer_trainer(top_model,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,batch_size,path_to_best_model,epochs_source,train_top_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -163,7 +222,7 @@ def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNu
 		checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
 
 		top_model.fit(train_data, train_labels,
-				  epochs=epochs,
+				  epochs=epochs_source,
 				  batch_size=batch_size,
 				  validation_data=(validation_data, validation_labels),
 				  callbacks = [earlystop,checkpoint],
@@ -171,7 +230,7 @@ def top_layer_trainer(train_top_model,top_model,epochs,batch_size,trainNum,valNu
 
 		print(top_model.evaluate(test_data, test_labels, verbose=1))
 
-def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
+def full_model_builder(lr,path_to_best_top_model,bottom_model,top_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -188,7 +247,7 @@ def full_model_builder(path_to_best_top_model,bottom_model,top_model,lr):
 # TRAINING FIRST LAYERS													#
 ############################################################################
 
-def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers ):
+def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 
@@ -217,7 +276,7 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 
 	return model_copy
 
-def first_layers_reinitializer(model,layerLimit):
+def first_layers_reinitializer(model,layerLimit,**kwargs):
 	"""
 	re-initializes weights of layers up to layerLimit
 	"""
@@ -231,7 +290,7 @@ def first_layers_reinitializer(model,layerLimit):
 				initializer_method.run(session=session)
 				print('reinitializing layer {}.{}'.format(layer.name, v))
 
-def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold):
+def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	this function trains models from [first_layers_modified_model_builder] function
@@ -240,7 +299,7 @@ def first_layers_modified_model_trainer(model,train_generator,validation_generat
 	score = model.evaluate_generator(test_generator)
 	print("projector score : ", score)
 
-def small_net_builder(originalSize,resizeFactor,lr):
+def small_net_builder(originalSize,resizeFactor,lr,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -278,7 +337,7 @@ def small_net_builder(originalSize,resizeFactor,lr):
 
 	return model
 
-def from_generator_to_array(classes,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum,valNum,testNum):
+def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,testNum,classes,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -320,7 +379,7 @@ def from_generator_to_array(classes,path_to_train,path_to_validation,originalSiz
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
 
-def trainedWeightSaver(model,layerLimit,modelName):
+def trainedWeightSaver(model,layerLimit,modelName,**kwargs):
 	"""
 	luc blassel
 	saves weights of layers up to layerLimit to modelName file
@@ -335,7 +394,7 @@ def trainedWeightSaver(model,layerLimit,modelName):
 #######################################################
 #				BOOSTING							 #
 #######################################################
-def take(tab,indexes):
+def take(tab,indexes,**kwargs):
 	output = np.zeros(tab.shape)
 	c=0
 	for i in indexes:
@@ -344,7 +403,7 @@ def take(tab,indexes):
 	return output
 
 # def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
-def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr,proba_threshold):
+def booster(full_model,x_train,y_train,x_val,y_val,epochs,lr,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -419,7 +478,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 
 	return model_list, error_list, alpha_list, current_model
 
-def prediction_boosting(x,model_list, alpha_list,proba_threshold,model):
+def prediction_boosting(x,model_list, alpha_list,proba_threshold,model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -458,7 +517,7 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold,model):
 			results.append(0)
 	return results
 
-def accuracy(y_true,y_pred):
+def accuracy(y_true,y_pred,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -476,93 +535,65 @@ def accuracy(y_true,y_pred):
 def main():
 	""" this function stands for testing purposes
 	"""
+
+	dt = datetime.now()
+	print(200*"#")
+	print("TRANSBOOST LAUNCH on {:%Y-%m-%d %H:%M}".format(datetime.now()))
+	print(200*"#")
+
+	downloader(url,path) #path ad url in dataLoader.py
+	params = getArgs()
+
+	checkDir(params['models_path'])
+	checkDir(params['models_weights_path'])
+
 	try:
-		classes_source = ['dog','truck']
-		classes_target = ['deer','horse']
-		num_of_classes = len(classes_source)
+		# #1st part
+		# bottom_model = bottom_layers_builder(originalSize,resizeFactor)
+		# train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_source,transformation_ratio)
+		# pstest = pd.Series(test_generator_source.classes[:testNum_source])
+		# counts = pstest.value_counts()
+		# print("test classes ",counts)
+		# pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
+		# counts = pstrain.value_counts()
+		# print("train classes ",counts)
+		# save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size_source,recompute_transfer_values)
+		# top_model = top_layer_builder(lr_source,num_of_classes)
+		# top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
+		# top_model_init = top_layer_builder(lr_source,num_of_classes)
+		# full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
+		# full_model.save('full_model.h5')
+        #
+		# #2nd part
+		# x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
+		# model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
+		# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold,model_returned)
+		# print(accuracy(y_test_target,predicted_classes))
+        #
+		# print(accuracy(y_test_target,predicted_classes))
 
-		batch_size_source = 10
-		transformation_ratio = .05
-		originalSize = 32
-		resizeFactor = 5
-		path_to_train = path + "train"
-		path_to_validation = path + "validation"
-		path_to_test = path + "test"
-
-		path_to_best_top_model = "best_top_model.hdf5"
-
-		trainNum_source = 7950
-		valNum_source = 2040
-		testNum_source = 2040
-		trainNum_target = 8010
-		valNum_target = 1980
-		testNum_target = 1980
-
-		lr_source = 0.0001
-		epochs_source = 10
-
-		recompute_transfer_values = False
-		train_top_model = False
-
-		bottom_model = bottom_layers_builder(originalSize,resizeFactor)
-		train_generator_source,validation_generator_source,test_generator_source = create_generators(classes_source,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_source,transformation_ratio)
+		#1st part
+		bottom_model = bottom_layers_builder(**params)
+		train_generator_source,validation_generator_source,test_generator_source = create_generators(params['classes_source'],path_to_train,path_to_validation,params['batch_size_source'],**params)
 		pstest = pd.Series(test_generator_source.classes[:testNum_source])
 		counts = pstest.value_counts()
 		print("test classes ",counts)
 		pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
 		counts = pstrain.value_counts()
 		print("train classes ",counts)
-		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,batch_size_source,recompute_transfer_values)
-		top_model = top_layer_builder(lr_source,num_of_classes)
-		top_layer_trainer(train_top_model,top_model,epochs_source,batch_size_source,trainNum_source,valNum_source,testNum_source,lr_source,train_generator_source,validation_generator_source,test_generator_source,path_to_best_top_model)
-		top_model_init = top_layer_builder(lr_source,num_of_classes)
-		full_model = full_model_builder(path_to_best_top_model,bottom_model,top_model_init,lr_source)
+		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,params['batch_size_source'],**params)
+		top_model = top_layer_builder(params['lr_source'],**params)
+		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,params['batch_size_source'],**params)
+		top_model_init = top_layer_builder(params['lr_source'],**params)
+		full_model = full_model_builder(params['lr_source'],bottom_model,top_model_init,**params)
 		full_model.save('full_model.h5')
-		# full_model_score = full_model.evaluate_generator(test_generator_source)
-		# print(full_model_score)
 
-		layerLimit = 15
-		epochs_target = 50
-		lr_target = 0.0001
-		batch_size_target = 10
-		threshold = .65
-		reinitialize_bottom_layers = False
-		bigNet = False
-		times = 100
-
-		# train_generator_target,validation_generator_target,test_generator_target = create_generators(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,batch_size_target,transformation_ratio)
-		# first_layers_modified_model = first_layers_modified_model_builder(full_model,layerLimit,reinitialize_bottom_layers)
-		# first_layers_modified_model_score = first_layers_modified_model.evaluate_generator(test_generator_target)
-		# print(first_layers_modified_model_score)
-		# first_layers_modified_model_trainer(first_layers_modified_model,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
-
-		# small_net_builder= small_net_builder(originalSize,resizeFactor,lr)
-		# first_layers_modified_model_trainer(small_net_builder,train_generator_target,validation_generator_target,test_generator_target,epochs_target,threshold)
-
-		proba_threshold = .5
-		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(classes_target,path_to_train,path_to_validation,originalSize,resizeFactor,transformation_ratio,trainNum_target,valNum_target,testNum_target)
-		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,epochs_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,lr_target,proba_threshold)
-		# pickler = pickle.Pickler(open('alpha_list.pkl', 'wb'), -1)
-		# pickler.dump(alpha_list)
-		# print(model_list, error_list, alpha_list)
-		# c = 0
-		# for model in model_list:
-		# 	model_path = "model"+ str(c) +".h5"
-		# 	model.save(model_path)
-		# 	c+=1
-		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold,model_returned)
-		# np.save(open('boosting_classes.npy', 'wb'), predicted_classes)
+		#2nd part
+		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
+		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,params['epochs_target'],params['lr_target'],**params)
+		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params)
 		print(accuracy(y_test_target,predicted_classes))
 
-		# model_list = []
-		# for time in range(times):
-		# 	path_model = "model"+ str(time) +".h5"
-		# 	model = load_model(path_model)
-		# 	model_list.append(model)
-		# with open('result_list.pkl', 'rb') as pickle_file:
-		# 	alpha_list = pickle.load(pickle_file)
-
-		# predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,proba_threshold)
 		print(accuracy(y_test_target,predicted_classes))
 
 	except MemoryError:
