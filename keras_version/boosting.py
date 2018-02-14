@@ -379,14 +379,19 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
 
-def trainedWeightSaver(model,layerLimit,modelName):
+def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	"""
 	luc blassel
 	saves weights of layers up to layerLimit to modelName file
 	"""
 	model_copy = Sequential()
-	for layer in model.layers[:layerLimit]:
-		model_copy.add(layer)
+
+	if bigNet :
+		for layer in model.layers[:layerLimit]:
+			model_copy.add(layer)
+	else:
+		for layer in model.layers:
+			model_copy.add(layer)
 
 	model_copy.save_weights(modelName)
 	del model_copy
@@ -454,7 +459,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		# model_list.append(current_model)
 
 		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaver(current_model,layerLimit,current_model_path)
+		trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
 
 		alpha_list.append(alpha)
 
@@ -478,7 +483,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 
 	return model_list, error_list, alpha_list, current_model
 
-def prediction_boosting(x,model_list, alpha_list,proba_threshold,model,**kwargs):
+def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -594,8 +599,8 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
-		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params)
+		model_list, _ , alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
+		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,model_returned,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
 
