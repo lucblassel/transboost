@@ -544,7 +544,7 @@ def main():
 	downloader(url,path) #path ad url in dataLoader.py
 	params = getArgs()
 
-	print("BigNet = {}".format(params['BigNet']))
+	print("BigNet = {}".format(params['bigNet']))
 
 	num_of_classes = len(params['classes_source'])
 
