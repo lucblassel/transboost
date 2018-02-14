@@ -544,6 +544,8 @@ def main():
 	downloader(url,path) #path ad url in dataLoader.py
 	params = getArgs()
 
+	num_of_classes = len(params['classes_source'])
+
 	checkDir(params['models_path'])
 	checkDir(params['models_weights_path'])
 
@@ -582,9 +584,9 @@ def main():
 		counts = pstrain.value_counts()
 		print("train classes ",counts)
 		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,params['batch_size_source'],**params)
-		top_model = top_layer_builder(params['lr_source'],**params)
+		top_model = top_layer_builder(params['lr_source'],num_of_classes,**params)
 		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,params['batch_size_source'],**params)
-		top_model_init = top_layer_builder(params['lr_source'],**params)
+		top_model_init = top_layer_builder(params['lr_source'],num_of_classes,**params)
 		full_model = full_model_builder(params['lr_source'],bottom_model,top_model_init,**params)
 		full_model.save('full_model.h5')
 
