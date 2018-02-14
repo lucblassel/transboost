@@ -230,7 +230,7 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 		print(top_model.evaluate(test_data, test_labels, verbose=1))
 
-def full_model_builder(bottom_model,top_model,lr_source,path_to_best_top_model,**kwargs):
+def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -543,6 +543,8 @@ def main():
 
 	downloader(url,path) #path ad url in dataLoader.py
 	params = getArgs()
+
+	print("BigNet = {}".format(params['BigNet']))
 
 	num_of_classes = len(params['classes_source'])
 
