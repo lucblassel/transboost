@@ -199,7 +199,7 @@ def top_layer_builder(lr,num_of_classes,**kwargs):
 	model.compile(optimizer = optimizers.Adam(lr=lr,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
-def top_layer_trainer(top_model,trainNum,valNum,testNum,lr,train_generator,validation_generator,test_generator,batch_size,path_to_best_model,epochs_source,train_top_model,**kwargs):
+def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size,lr,path_to_best_model,epochs_source,train_top_model,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -585,7 +585,7 @@ def main():
 		print("train classes ",counts)
 		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,params['batch_size_source'],**params)
 		top_model = top_layer_builder(params['lr_source'],num_of_classes,**params)
-		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,params['batch_size_source'],**params)
+		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,params['batch_size_source'],params['lr_source'],**params)
 		top_model_init = top_layer_builder(params['lr_source'],num_of_classes,**params)
 		full_model = full_model_builder(params['lr_source'],bottom_model,top_model_init,**params)
 		full_model.save('full_model.h5')
