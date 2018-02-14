@@ -219,7 +219,7 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 		earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-		checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
+		checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_acc', verbose=1, save_best_only=True, period=1,mode='max')
 
 		top_model.fit(train_data, train_labels,
 				  epochs=epochs_source,
@@ -436,16 +436,16 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		if bigNet :
 			current_model = first_layers_reinitializer(current_model,layerLimit)
 		else :
-			current_model = small_net_builder(originalSize,resizeFactor,lr)
+			current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
 		error = 0
 		while error == 1 or error == 0 :
 			if bigNet :
 				current_model = first_layers_reinitializer(current_model, layerLimit)
 			else:
-				current_model = small_net_builder(originalSize,resizeFactor,lr)
+				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 
 			error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
 		alpha = .5*np.log((1-error)/error)
