@@ -223,7 +223,7 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 		top_model.fit(train_data, train_labels,
 				  epochs=epochs_source,
-				  batch_size=batch_size,
+				  batch_size=batch_size_source,
 				  validation_data=(validation_data, validation_labels),
 				  callbacks = [earlystop,checkpoint],
 				  shuffle = True)
