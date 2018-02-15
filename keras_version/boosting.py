@@ -223,11 +223,11 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 		earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
 
-		checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_loss', verbose=1, save_best_only=True, period=1,mode='max')
+		checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_acc', verbose=1, save_best_only=True, period=1,mode='max')
 
 		top_model.fit(train_data, train_labels,
 				  epochs=epochs_source,
-				  batch_size=batch_size,
+				  batch_size=batch_size_source,
 				  validation_data=(validation_data, validation_labels),
 				  callbacks = [earlystop,checkpoint],
 				  shuffle = True)
@@ -383,14 +383,19 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
 
-def trainedWeightSaver(model,layerLimit,modelName):
+def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	"""
 	luc blassel
 	saves weights of layers up to layerLimit to modelName file
 	"""
 	model_copy = Sequential()
-	for layer in model.layers[:layerLimit]:
-		model_copy.add(layer)
+
+	if bigNet :
+		for layer in model.layers[:layerLimit]:
+			model_copy.add(layer)
+	else:
+		for layer in model.layers:
+			model_copy.add(layer)
 
 	model_copy.save_weights(modelName)
 	del model_copy
@@ -407,7 +412,7 @@ def take(tab,indexes):
 	return output
 
 # def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
-def booster(full_model,x_train,y_train,x_val,y_val,epochs,lr,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,**kwargs):
+def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -440,16 +445,16 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,lr,threshold,layerLimi
 		if bigNet :
 			current_model = first_layers_reinitializer(current_model,layerLimit)
 		else :
-			current_model = small_net_builder(originalSize,resizeFactor,lr)
+			current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
 		error = 0
 		while error == 1 or error == 0 :
 			if bigNet :
 				current_model = first_layers_reinitializer(current_model, layerLimit)
 			else:
-				current_model = small_net_builder(originalSize,resizeFactor,lr)
+				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 
 			error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
 		alpha = .5*np.log((1-error)/error)
@@ -458,7 +463,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,lr,threshold,layerLimi
 		# model_list.append(current_model)
 
 		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaver(current_model,layerLimit,current_model_path)
+		trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
 
 		alpha_list.append(alpha)
 
@@ -482,7 +487,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,lr,threshold,layerLimi
 
 	return model_list, error_list, alpha_list, current_model
 
-def prediction_boosting(x,model_list, alpha_list,proba_threshold,model,**kwargs):
+def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -575,11 +580,10 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, error_list, alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
-		predicted_classes = prediction_boosting(x_test_target,model_list, alpha_list,model_returned,**params)
-		print(accuracy(y_test_target,predicted_classes))
+		model_list, _ , alpha_list, model_returned = booster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
+		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,model_returned,**params)
+		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
-		print(accuracy(y_test_target,predicted_classes))
 
 	except MemoryError:
 		import gc
