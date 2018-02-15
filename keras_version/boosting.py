@@ -485,6 +485,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 				prob[i] = prob[i]*np.exp(alpha)
 		prob = prob / np.sum(prob)
 
+        if c != times and not bigNet:
+            del current_model
+
 	return model_list, error_list, alpha_list, current_model
 
 def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
