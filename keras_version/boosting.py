@@ -37,15 +37,15 @@ from datetime import datetime
 
 
 def getArgs():
-    """
-    gets the parameters from config file
-    """
-    if len(sys.argv)==1:
-        print("please specify path of config file...")
-        sys.exit()
+	"""
+	gets the parameters from config file
+	"""
+	if len(sys.argv)==1:
+		print("please specify path of config file...")
+		sys.exit()
 
-    path = sys.argv[1]
-    return pg.reader(path) #dictionary with relevant parameters
+	path = sys.argv[1]
+	return pg.reader(path) #dictionary with relevant parameters
 
 # checks if models directory already exists, and iuf not creates it
 def checkDir(dataPath):
@@ -487,8 +487,8 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 				prob[i] = prob[i]*np.exp(alpha)
 		prob = prob / np.sum(prob)
 
-        if c != times and not bigNet:
-            del current_model
+		if c != times and not bigNet:
+			del current_model
 
 	return model_list, error_list, alpha_list, current_model
 
@@ -560,7 +560,7 @@ def main():
 
 	print("\n\n\nexecuted with the following settings:\n")
 	printParams(params)
-    print("\n\n\n")
+	print("\n\n\n")
 
 	num_of_classes = len(params['classes_source'])
 
