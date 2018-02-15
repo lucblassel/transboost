@@ -16,7 +16,7 @@
   "classes_target" : ["dog","truck"],
   "classes_target2" : ["deer","horse"],
   "layerLimit" : 15,
-  "times" : 100,
+  "times" : 25,
   "lr_source" : 0.0001,
   "lr_target" : 0.0001,
   "recompute_transfer_values" : false,
