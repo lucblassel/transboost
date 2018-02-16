@@ -24,7 +24,7 @@ We decided to use Keras with TF back-end. It was a lot simpler to modify the net
 We were also able to freeze layers and reinitialize weights in these to pave the way for boosting.
 
 ## TODO
-- Implement boosting algorithm
-- implement execution of script in GCloud environment
+- ~~Implement boosting algorithm~~
+- ~~implement execution of script in GCloud environment~~
 - Test boosting with weak projectors against a single strong projector
 - Test boosting against specially trained model.
