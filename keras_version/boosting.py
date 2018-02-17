@@ -362,14 +362,12 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs,threshold,layerLimit,t
 
 		model_list.append(current_model_path) #adds model path to list
 		current_model.save(current_model_path) #saves model to disk
-
-		del current_model #frees up memory space
-
+        
 		alpha_list.append(alpha)
 
 		predicted_probs = current_model.predict(x_train)
 		predicted_classes = []
-
+		del current_model #frees up memory space
 
 
 		for predicted_prob in predicted_probs:
