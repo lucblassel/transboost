@@ -583,11 +583,10 @@ def main():
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
 
-# except MemoryError:
-# 	objects = [o for o in gc.get_objects()]
-# 	for o in objects:
-# 		print(o, sys.getsizeof(o))
-
+	except MemoryError:
+		objects = [o for o in gc.get_objects()]
+		for o in objects:
+			print(o, sys.getsizeof(o))
 
 if __name__ == '__main__':
 	main()
