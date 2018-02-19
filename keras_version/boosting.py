@@ -16,6 +16,7 @@ from dataLoader import *
 
 #external packages importing
 import sys
+import gc
 import time
 import os.path
 import numpy as np
@@ -414,9 +415,10 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	model_list = []
 	error_list = []
 	alpha_list = []
-	c = 1
 
-	current_model = load_model('full_model.h5')
+	if bigNet:
+		current_model = load_model('full_model.h5')
+
 	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
@@ -429,8 +431,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	for time in range(times):
 		print("="*50)
 		print( "boosting step number "+str(time))
-		current_model_path = os.path.join(models_weights_path,"model_"+str(c)+".h5")
-		c += 1
+		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -476,13 +477,12 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 
 		for i in range(len(predicted_classes)):
 			if predicted_classes[i] == y_train[i]:
-				prob[i] = prob[i]*np.exp(-alpha)
+				prob[i] = 1/(2*(1-error))
 			else:
-				prob[i] = prob[i]*np.exp(alpha)
-		prob = prob / np.sum(prob)
+				prob[i] = 1/(2*error)
 
-		if time < times-1 and not bigNet:
-			del current_model
+		Z = 2*np.sqrt(error)*np.sqrt(1-error)
+		prob = prob / Z
 
 	return model_list, error_list, alpha_list, current_model
 
@@ -497,7 +497,6 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 	c = 0
 	for model_name in model_list:
 		print("beginning prediction for model :",c)
-
 		model.load_weights(model_name,by_name=True) #loads model weights
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
@@ -584,12 +583,10 @@ def main():
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
 
-	except MemoryError:
-		import gc
-		import sys
-		objects = [o for o in gc.get_objects()]
-		for o in objects:
-			print(o, sys.getsizeof(o))
+	# except MemoryError:
+	# 	objects = [o for o in gc.get_objects()]
+	# 	for o in objects:
+	# 		print(o, sys.getsizeof(o))
 
 if __name__ == '__main__':
 	main()
