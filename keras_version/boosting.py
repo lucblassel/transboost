@@ -347,13 +347,7 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 	"""
 	img_size = originalSize*resizeFactor
 
-	train_datagen = ImageDataGenerator(rescale=1. / 255,
-									   rotation_range=transformation_ratio,
-									   shear_range=transformation_ratio,
-									   zoom_range=transformation_ratio,
-									   cval=transformation_ratio,
-									   horizontal_flip=True,
-									   vertical_flip=True)
+	train_datagen = ImageDataGenerator(rescale=1. / 255)
 
 	validation_datagen = ImageDataGenerator(rescale=1. / 255)
 
@@ -457,7 +451,6 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
 
 			#error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
-			print("metric names : ", current_model.metrics_names)
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
 
 		alpha = .5*np.log((1-error)/error)
@@ -571,12 +564,12 @@ def main():
 	try:
 		bottom_model = bottom_layers_builder(**params)
 		train_generator_source,validation_generator_source,test_generator_source = create_generators(path_to_train,path_to_validation,**params)
-		pstest = pd.Series(test_generator_source.classes[:testNum_source])
-		counts = pstest.value_counts()
-		print("test classes ",counts)
-		pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
-		counts = pstrain.value_counts()
-		print("train classes ",counts)
+		# pstest = pd.Series(test_generator_source.classes[:testNum_source])
+		# counts = pstest.value_counts()
+		# print("test classes ",counts)
+		# pstrain = pd.Series(train_generator_source.classes[:trainNum_source])
+		# counts = pstrain.value_counts()
+		# print("train classes ",counts)
 		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,**params)
 		top_model = top_layer_builder(num_of_classes,**params)
 		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,**params)
