@@ -483,6 +483,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 
 		Z = 2*np.sqrt(error)*np.sqrt(1-error)
 		prob = prob / Z
+		print(np.sum(prob))
 
 	return model_list, error_list, alpha_list, current_model
 
