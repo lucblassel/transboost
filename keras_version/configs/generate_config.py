@@ -31,7 +31,8 @@ def generate_config(threshold,maxtime):
        "recompute_transfer_values" : False,
        "train_top_model" : False,
        "reinitialize_bottom_layers" : False,
-       "bigNet" : False
+       "bigNet" : False,
+       "step" : 10
        }
     with open('%s.json'%(f_name),'w') as f:
         json.dump(d,f)
