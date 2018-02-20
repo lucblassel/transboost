@@ -33,9 +33,8 @@ def generate_config(threshold,time):
        "reinitialize_bottom_layers" : False,
        "bigNet" : False
        }
-    json_d=json.dumps(d)
     with open('%s.json'%(f_name),'w') as f:
-        json.dump(json_d,f)
+        json.dump(d,f)
 #    with open('1.txt','w') as f:
 #        f.write('s')
 
