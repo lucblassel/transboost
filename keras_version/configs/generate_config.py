@@ -7,8 +7,8 @@ Created on Tue Feb 20 10:29:27 2018
 """
 import json
 
-def generate_config(threshold,time):
-    f_name='config_time%d_threshold%4.2f'%(time,threshold)
+def generate_config(threshold,maxtime):
+    f_name='config_threshold%d_maxtime%d'%(int(threshold*100),maxtime)
     d={
        "models_path" : "models",
        "models_weights_path" : "models_weights",
@@ -25,7 +25,7 @@ def generate_config(threshold,time):
        "classes_source" : ["dog","truck"],
        "classes_target" : ["deer","horse"],
        "layerLimit" : 15,
-       "times" : time,
+       "times" : maxtime,
        "lr_source" : 0.0001,
        "lr_target" : 0.0001,
        "recompute_transfer_values" : False,
@@ -35,15 +35,16 @@ def generate_config(threshold,time):
        }
     with open('%s.json'%(f_name),'w') as f:
         json.dump(d,f)
+    with open('configBatch.conf','a') as g:
+        path_name='configs/%s\n'%('%s.json'%(f_name))
+        g.write(path_name)
 #    with open('1.txt','w') as f:
 #        f.write('s')
 
 def main():
-    time=10
-    while time<=1000:
-        for threshold in [0.55,0.6,0.65,0.7]:
-            generate_config(threshold,time)
-        time=int(time*1.1)
+    maxtime=500
+    for threshold in [0.55,0.6,0.65,0.7]:
+        generate_config(threshold,maxtime)
     
 if __name__=='__main__':
     main()
