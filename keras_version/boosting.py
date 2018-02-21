@@ -561,9 +561,10 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,
 		prob = prob / np.sum(prob)
         
 
-		if time % step == 0:        
-			x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**kwargs)
-			predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,current_model,**kwargs)
+		if time % step == 0:
+			param_temp=getArgs()        
+			x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**param_temp)
+			predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,current_model,**param_temp)
 			print("time: ",time,"accuracy :",accuracy(y_test_target,predicted_classes))
            
 	return model_list, error_list, alpha_list, current_model
