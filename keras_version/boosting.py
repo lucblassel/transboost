@@ -561,9 +561,9 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 		prob = prob / np.sum(prob)
         
 
-		if time % step == 0:        
+		if (time+1) % step == 0:        
 			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
-			print("time: ",time,"accuracy :",accuracy(y_test,predicted_classes))
+			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
            
 	return model_list, error_list, alpha_list, current_model
 
