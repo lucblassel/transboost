@@ -24,7 +24,7 @@ def readConfigs():
         for conf in configs:
             if len(conf)>0 and conf[0]!="#":
                 print(5*"\n"+"calling next configuration"+5*"\n")
-                os.system('python boosting.py '+conf)
+                os.system('python3 boosting.py '+conf)
 
 
 
