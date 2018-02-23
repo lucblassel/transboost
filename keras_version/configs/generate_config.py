@@ -7,8 +7,12 @@ Created on Tue Feb 20 10:29:27 2018
 """
 import json
 
-def generate_config(threshold,maxtime):
-    f_name='config_threshold%d_maxtime%d'%(int(threshold*100),maxtime)
+def generate_config(threshold,maxtime,test=False):
+    if test==True:
+        t='test'
+    else:
+        t=''
+    f_name='config%s_threshold%d_maxtime%d'%(t,int(threshold*100),maxtime)
     d={
        "models_path" : "models",
        "models_weights_path" : "models_weights",
@@ -36,16 +40,17 @@ def generate_config(threshold,maxtime):
        }
     with open('%s.json'%(f_name),'w') as f:
         json.dump(d,f)
-    with open('configBatch.conf','a') as g:
+    with open('configBatch%s.conf'%(t),'a') as g:
         path_name='configs/%s\n'%('%s.json'%(f_name))
         g.write(path_name)
 #    with open('1.txt','w') as f:
 #        f.write('s')
 
 def main():
-    maxtime=200
+    maxtime=10
+    test=True
     for threshold in [0.55,0.6,0.65,0.7]:
-        generate_config(threshold,maxtime)
+        generate_config(threshold,maxtime,test)
     
 if __name__=='__main__':
     main()
