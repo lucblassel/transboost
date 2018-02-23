@@ -294,6 +294,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				initializer_method = getattr(v_arg,'initializer')
 				initializer_method.run(session=session)
 				print('reinitializing layer {}.{}'.format(layer.name, v))
+	return model
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,**kwargs):
 	"""
