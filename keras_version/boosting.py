@@ -577,7 +577,7 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 	predicted_class_list = []
 	c = 0
 	for model_name in model_list:
-		print("beginning prediction for model :",c)
+		#print("beginning prediction for model :",c)
 		model.load_weights(model_name,by_name=True) #loads model weights
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
@@ -589,7 +589,7 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 			else:
 				to_append.append(-1)
 		predicted_class_list.append(to_append)
-		print("ending prediction for model :",c)
+		#print("ending prediction for model :",c)
 		c +=1
 
 	predicted_class_list = np.array(predicted_class_list)
