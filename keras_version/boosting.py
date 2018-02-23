@@ -484,7 +484,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		prob = prob / np.sum(prob)
 	return model_list, error_list, alpha_list, current_model
 
-def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
+def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -561,10 +561,9 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,
 		prob = prob / np.sum(prob)
         
 
-		if time % step == 0:        
-			x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**kwargs)
-			predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,current_model,**kwargs)
-			print("time: ",time,"accuracy :",accuracy(y_test_target,predicted_classes))
+		if (time+1) % step == 0:        
+			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
+			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
            
 	return model_list, error_list, alpha_list, current_model
 
@@ -660,7 +659,7 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list, model_returned = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
+		model_list, _ , alpha_list, model_returned = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,model_returned,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
