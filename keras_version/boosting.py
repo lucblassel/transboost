@@ -13,7 +13,6 @@ from binariser import *
 from dataProcessing import *
 from callbackBoosting import *
 from dataLoader import *
-import gc
 
 #external packages importing
 import sys
@@ -484,6 +483,11 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 				prob[i] = 1/(2*error)
 
 		prob = prob / np.sum(prob)
+
+		if time < times-1 and not bigNet:
+			del current_model
+			gc.collect() #garbage collector frees up memory (normally)
+			
 	return model_list, error_list, alpha_list, current_model
 
 def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
@@ -564,19 +568,14 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 
 		prob = prob / np.sum(prob)
 
-<<<<<<< HEAD
-
-		if time%step == 0:
-			x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-			predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,current_model,**params)
-			print("time: ",time,"accuracy :",accuracy(y_test_target,predicted_classes))
-
-=======
-		if (time+1) % step == 0:        
+		if (time+1) % step == 0:
 			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
 			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
-           
->>>>>>> 950de21e428e563388cf2a1332dc97ec07422a46
+
+		if time < times-1 and not bigNet:
+			del current_model
+			gc.collect() #garbage collector frees up memory (normally)
+
 	return model_list, error_list, alpha_list, current_model
 
 def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
