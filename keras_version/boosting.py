@@ -295,6 +295,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				initializer_method = getattr(v_arg,'initializer')
 				initializer_method.run(session=session)
 				print('reinitializing layer {}.{}'.format(layer.name, v))
+	return model
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,**kwargs):
 	"""
@@ -485,7 +486,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		prob = prob / np.sum(prob)
 	return model_list, error_list, alpha_list, current_model
 
-def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
+def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -494,10 +495,12 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,
 	error_list = []
 	alpha_list = []
 
-	if bigNet:
-		current_model = load_model('full_model.h5')
+	#if bigNet:
+		#current_model = load_model('full_model.h5')
 
-	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
+	if bigNet:
+	   current_model=first_layers_reinitializer(full_model,layerLimit)
+    # full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
 	if train_length==0:
@@ -561,12 +564,19 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,
 
 		prob = prob / np.sum(prob)
 
+<<<<<<< HEAD
 
 		if time%step == 0:
 			x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
 			predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,current_model,**params)
 			print("time: ",time,"accuracy :",accuracy(y_test_target,predicted_classes))
 
+=======
+		if (time+1) % step == 0:        
+			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
+			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
+           
+>>>>>>> 950de21e428e563388cf2a1332dc97ec07422a46
 	return model_list, error_list, alpha_list, current_model
 
 def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
@@ -579,7 +589,7 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 	predicted_class_list = []
 	c = 0
 	for model_name in model_list:
-		print("beginning prediction for model :",c)
+		#print("beginning prediction for model :",c)
 		model.load_weights(model_name,by_name=True) #loads model weights
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
@@ -591,7 +601,7 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 			else:
 				to_append.append(-1)
 		predicted_class_list.append(to_append)
-		print("ending prediction for model :",c)
+		#print("ending prediction for model :",c)
 		c +=1
 
 	predicted_class_list = np.array(predicted_class_list)
@@ -661,7 +671,7 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list, model_returned = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,**params)
+		model_list, _ , alpha_list, model_returned = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,model_returned,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
