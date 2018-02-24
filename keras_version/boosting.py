@@ -165,26 +165,29 @@ def create_generators(path_to_train,path_to_validation,classes_source,batch_size
 
 	return train_generator,validation_generator,test_generator
 
-def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size_source,recompute_transfer_values,**kwargs):
+def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size_source,recompute_transfer_values,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
 	file1 = Path('bottleneck_features_train.npy')
 	if not file1.is_file() or recompute_transfer_values:
-		print('bottleneck_features_train.npy')
+		if verbose:
+			print('bottleneck_features_train.npy')
 		bottleneck_features_train = model.predict_generator(train_generator, trainNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_train.npy', 'wb'), bottleneck_features_train)
 
 
 	file2 = Path('bottleneck_features_val.npy')
 	if not file2.is_file() or recompute_transfer_values:
-		print('bottleneck_features_val.npy')
+		if verbose:
+			print('bottleneck_features_val.npy')
 		bottleneck_features_val = model.predict_generator(validation_generator, valNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_val.npy', 'wb'), bottleneck_features_val)
 
 	file3 = Path('bottleneck_features_test.npy')
 	if not file3.is_file() or recompute_transfer_values:
-		print('bottleneck_features_test.npy')
+		if verbose:
+			print('bottleneck_features_test.npy')
 		bottleneck_features_test = model.predict_generator(test_generator, testNum // batch_size_source, use_multiprocessing=False, verbose=1)
 		np.save(open('bottleneck_features_test.npy', 'wb'), bottleneck_features_test)
 
@@ -204,7 +207,7 @@ def top_layer_builder(num_of_classes,lr_source,**kwargs):
 	model.compile(optimizer = optimizers.Adam(lr=lr_source,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
-def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size_source,path_to_best_model,epochs_source,train_top_model,**kwargs):
+def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size_source,path_to_best_model,epochs_source,train_top_model,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -233,7 +236,7 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 				  callbacks = [earlystop,checkpoint],
 				  shuffle = True)
 
-		print(top_model.evaluate(test_data, test_labels, verbose=1))
+		print(top_model.evaluate(test_data, test_labels, verbose=verbose))
 
 def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwargs):
 	"""
@@ -296,14 +299,15 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				print('reinitializing layer {}.{}'.format(layer.name, v))
 	return model
 
-def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,**kwargs):
+def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	this function trains models from [first_layers_modified_model_builder] function
 	"""
 	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
 	score = model.evaluate_generator(test_generator)
-	print("projector score : ", score)
+	if verbose:
+		print("projector score : ", score)
 
 def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
@@ -408,7 +412,7 @@ def take(tab,indexes):
 	return output
 
 # def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
-def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,**kwargs):
+def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -430,8 +434,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	indexes = list(range(train_length))
 
 	for time in range(times):
-		print("="*50)
-		print( "boosting step number "+str(time))
+		if verbose:
+			print("="*50)
+			print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
@@ -450,7 +455,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",verbose)], shuffle=True)
 
 			#error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
@@ -487,10 +492,10 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		if time < times-1 and not bigNet:
 			del current_model
 			gc.collect() #garbage collector frees up memory (normally)
-			
+
 	return model_list, error_list, alpha_list, current_model
 
-def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,**kwargs):
+def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -534,7 +539,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=0, callbacks=[callbackBoosting(threshold,"acc")], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",verbose)], shuffle=True)
 
 			#error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]

@@ -20,5 +20,6 @@
   "recompute_transfer_values" : false,
   "train_top_model" : false,
   "reinitialize_bottom_layers" : false,
-  "bigNet" : false
+  "bigNet" : false,
+  "verbose" : false
 }
