@@ -36,7 +36,8 @@ def generate_config(threshold,maxtime,test=False):
        "train_top_model" : False,
        "reinitialize_bottom_layers" : False,
        "bigNet" : True,
-       "step" : 10
+       "step" : 10,
+       "verbose":False
        }
     with open('%s.json'%(f_name),'w') as f:
         json.dump(d,f)
@@ -47,8 +48,8 @@ def generate_config(threshold,maxtime,test=False):
 #        f.write('s')
 
 def main():
-    maxtime=10
-    test=True
+    maxtime=500
+    test=False
     for threshold in [0.55,0.6,0.65,0.7]:
         generate_config(threshold,maxtime,test)
     
