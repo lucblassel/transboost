@@ -35,6 +35,11 @@ from keras.utils.np_utils import to_categorical
 from pathlib import Path
 from itertools import chain
 from datetime import datetime
+from keras.backend.tensorflow_backend import set_session
+
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True #potential fix for GPU memory issues
+set_session(tf.Session(config=config))
 
 
 def getArgs():
