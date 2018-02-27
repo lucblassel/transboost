@@ -37,10 +37,14 @@ from itertools import chain
 from datetime import datetime
 from keras.backend.tensorflow_backend import set_session
 
+# TensorFlow wizardry
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True #potential fix for GPU memory issues
-set_session(tf.Session(config=config))
-
+# Don't pre-allocate memory; allocate as-needed
+config.gpu_options.allow_growth = True
+# Only allow a total of frac of the GPU memory to be allocated
+config.gpu_options.per_process_gpu_memory_fraction = 0.9
+# Create a session with the above options specified.
+k.tensorflow_backend.set_session(tf.Session(config=config))
 
 def getArgs():
 	"""
@@ -497,6 +501,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		if time < times-1 and not bigNet:
 			del current_model
 			gc.collect() #garbage collector frees up memory (normally)
+			k.clear_session()
 
 	return model_list, error_list, alpha_list, current_model
 
@@ -585,6 +590,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 		if time < times-1 and not bigNet:
 			del current_model
 			gc.collect() #garbage collector frees up memory (normally)
+			k.clear_session()
 
 	return model_list, error_list, alpha_list, current_model
 
