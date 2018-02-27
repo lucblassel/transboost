@@ -590,6 +590,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 		if time < times-1 and not bigNet:
 			del current_model
 			gc.collect() #garbage collector frees up memory (normally)
+			k.clear_session()
 
 	return model_list, error_list, alpha_list, current_model
 
