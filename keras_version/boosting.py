@@ -37,10 +37,14 @@ from itertools import chain
 from datetime import datetime
 from keras.backend.tensorflow_backend import set_session
 
+# TensorFlow wizardry
 config = tf.ConfigProto()
-config.gpu_options.allow_growth = True #potential fix for GPU memory issues
-set_session(tf.Session(config=config))
-
+# Don't pre-allocate memory; allocate as-needed
+config.gpu_options.allow_growth = True
+# Only allow a total of half the GPU memory to be allocated
+config.gpu_options.per_process_gpu_memory_fraction = 0.9
+# Create a session with the above options specified.
+k.tensorflow_backend.set_session(tf.Session(config=config))
 
 def getArgs():
 	"""
