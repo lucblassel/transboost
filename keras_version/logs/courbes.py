@@ -63,13 +63,13 @@ def main():
     
     
     paints.set_ylabel('accuracy')
-    plt.ylim(0,1)
+    plt.ylim(0.5,1)
     paints.set_title("The accuracy at different thresholds of smallnet")
     plt.legend(loc ='best')
     
 #    big.plot(ax=paints)
-    
-    plt.show()
+    plt.savefig('smallnet.png')
+#    plt.show()
     
 if __name__ == "__main__":
     main()
