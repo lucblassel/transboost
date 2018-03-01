@@ -287,7 +287,7 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 				if hasattr(v_arg,'initializer'):
 					initializer_method = getattr(v_arg, 'initializer')
 					initializer_method.run(session=session)
-					print('reinitializing layer {}.{}'.format(layer.name, v))
+					#print('reinitializing layer {}.{}'.format(layer.name, v))
 
 	for layer in model_copy.layers[layerLimit:]:
 		layer.trainable = False
@@ -306,7 +306,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 			if hasattr(v_arg,'initializer'):
 				initializer_method = getattr(v_arg,'initializer')
 				initializer_method.run(session=session)
-				print('reinitializing layer {}.{}'.format(layer.name, v))
+				#print('reinitializing layer {}.{}'.format(layer.name, v))
 	return model
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
@@ -410,6 +410,26 @@ def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	model_copy.save_weights(modelName)
 	del model_copy
 
+def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
+    
+    if bigNet :
+       weights = {}
+       for layer in model.layers[:layerLimit]:
+            weights[layer.name] = layer.get_weigths()
+       with open(modelName,'wb') as f:
+            pickle.dump(weights,f)
+    else:
+        model.save_weights(modelName)
+        return
+
+def trainedWeightLoader(model,modelName,layerLimit,bigNet):
+    if bigNet:
+        with open(modelName,'rb') as f:
+            weights = pickle.load(f)
+        for layer in model.layers[:layerLimit]:
+            layer.set_weights(weights[layer.name])
+    else:
+        model = load_model(modelName)
 #######################################################
 #				BOOSTING							 #
 #######################################################
@@ -475,8 +495,9 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		error_list.append(error)
 		# model_list.append(current_model)
 
-		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
+		model_list.append(current_model_path)#adds model path to list
+		# trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
+		trainedWeightSaverNew(current_model,layerLimit,current_model_path,bigNet)
 
 		alpha_list.append(alpha)
 
@@ -561,7 +582,8 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 		# model_list.append(current_model)
 
 		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
+		# trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
+		trainedWeightSaverNew(current_model,layerLimit,current_model_path,bigNet)
 
 		alpha_list.append(alpha)
 
@@ -595,7 +617,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 
 	return model_list, error_list, alpha_list, current_model
 
-def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs):
+def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,layerLimit,bigNet,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -606,7 +628,8 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,**kwargs)
 	c = 0
 	for model_name in model_list:
 		#print("beginning prediction for model :",c)
-		model.load_weights(model_name,by_name=True) #loads model weights
+		# model.load_weights(model_name,by_name=True) #loads model weights
+		trainedWeightLoader(model,model_name,layerLimit,bigNet)
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
