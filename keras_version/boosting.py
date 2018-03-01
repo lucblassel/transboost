@@ -287,7 +287,7 @@ def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_lay
 				if hasattr(v_arg,'initializer'):
 					initializer_method = getattr(v_arg, 'initializer')
 					initializer_method.run(session=session)
-					print('reinitializing layer {}.{}'.format(layer.name, v))
+					#print('reinitializing layer {}.{}'.format(layer.name, v))
 
 	for layer in model_copy.layers[layerLimit:]:
 		layer.trainable = False
@@ -306,7 +306,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 			if hasattr(v_arg,'initializer'):
 				initializer_method = getattr(v_arg,'initializer')
 				initializer_method.run(session=session)
-				print('reinitializing layer {}.{}'.format(layer.name, v))
+				#print('reinitializing layer {}.{}'.format(layer.name, v))
 	return model
 
 def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
@@ -410,7 +410,7 @@ def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	model_copy.save_weights(modelName)
 	del model_copy
 
-def traindeWeightSaverNew(model,layerLimit,modelName, bigNet):
+def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
     
     if bigNet :
        weights = {}
