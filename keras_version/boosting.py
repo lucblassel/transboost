@@ -415,7 +415,7 @@ def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
     if bigNet :
        weights = {}
        for layer in model.layers[:layerLimit]:
-            weights[layer.name] = layer.get_weigths()
+            weights[layer.name] = layer.get_weights()
        with open(modelName,'wb') as f:
             pickle.dump(weights,f)
     else:
