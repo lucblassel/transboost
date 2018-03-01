@@ -32,10 +32,10 @@ from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
+from keras.backend.tensorflow_backend import set_session
 from pathlib import Path
 from itertools import chain
 from datetime import datetime
-from keras.backend.tensorflow_backend import set_session
 
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True #potential fix for GPU memory issues
