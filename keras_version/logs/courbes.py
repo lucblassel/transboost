@@ -52,7 +52,7 @@ def readlog(txtfile, minlines_s, minlines_b):
     
 
 def main():
-    data = readlog("resultlog.txt",300,300)
+    data = readlog("resultlog.txt",500,500)
     print(data)
 
     small = data.xs('small',level = 'net')
@@ -64,7 +64,7 @@ def main():
     
     paints.set_ylabel('accuracy')
     plt.ylim(0,1)
-    paints.set_title("The accuracy at different thresholds of smallnet and bignet")
+    paints.set_title("The accuracy at different thresholds of smallnet")
     plt.legend(loc ='best')
     
 #    big.plot(ax=paints)
