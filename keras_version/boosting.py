@@ -415,7 +415,7 @@ def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
     if bigNet :
        weights = {}
        for layer in model.layers[:layerLimit]:
-            weights[layer.name] = layer.get_weigths()
+            weights[layer.name] = layer.get_weights()
        with open(modelName,'wb') as f:
             pickle.dump(weights,f)
     else:
@@ -427,7 +427,10 @@ def trainedWeightLoader(model,modelName,layerLimit,bigNet):
         with open(modelName,'rb') as f:
             weights = pickle.load(f)
         for layer in model.layers[:layerLimit]:
+        	layer.trainable = True
             layer.set_weights(weights[layer.name])
+        for layer in model.layers[layerLimit:]:
+        	layer.trainable = False
     else:
         model = load_model(modelName)
 #######################################################
