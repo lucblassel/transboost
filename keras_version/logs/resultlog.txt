@@ -1,3 +1,4 @@
-threshold55_small.log
-threshold60_small.log
-threshold65_small.log
+threshold55_small_500.log
+threshold60_small_500.log
+threshold65_small_500.log
+threshold70_small_500.log
