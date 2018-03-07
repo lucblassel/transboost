@@ -429,7 +429,8 @@ def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
 	model.save(modelName)
 
 def trainedWeightLoader(modelName,layerLimit,bigNet):
-	return model = load_model(modelName)
+	model = load_model(modelName)
+	return model
 
 
 def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
