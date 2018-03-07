@@ -428,7 +428,7 @@ def trainedWeightSaverNew_old(model,layerLimit,modelName, bigNet):
 def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
 	model.save(modelName)
 
-def trainedWeightLoader(model,modelName,layerLimit,bigNet):
+def trainedWeightLoader(modelName,layerLimit,bigNet):
 	return model = load_model(modelName)
 
 
@@ -474,13 +474,13 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	indexes = list(range(train_length))
 
 	k.clear_session()
-	
+
 	for time in range(times):
 		if verbose:
 			print("="*50)
 			print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
-		
+
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 
 		x_train_boost = take(x_train,train_boost_indexes)
