@@ -1,6 +1,9 @@
 #ignoring datasets
 train/
 
+#ignoring save files
+*.npy
+
 #ignoring latex files
 *.nav
 *.out

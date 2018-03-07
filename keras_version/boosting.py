@@ -33,10 +33,10 @@ from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils.np_utils import to_categorical
+from keras.backend.tensorflow_backend import set_session
 from pathlib import Path
 from itertools import chain
 from datetime import datetime
-from keras.backend.tensorflow_backend import set_session
 
 # TensorFlow wizardry
 config = tf.ConfigProto()
@@ -414,28 +414,28 @@ def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	del model_copy
 
 def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
-    
-    if bigNet :
-       weights = {}
-       for layer in model.layers[:layerLimit]:
-            weights[layer.name] = layer.get_weights()
-       with open(modelName,'wb') as f:
-            pickle.dump(weights,f)
-    else:
-        model.save_weights(modelName)
-        return
+
+	if bigNet :
+	   weights = {}
+	   for layer in model.layers[1:layerLimit]: #ignoring input layer
+			weights[layer.name] = layer.get_weights()
+	   with open(modelName,'wb') as f:
+			pickle.dump(weights,f)
+	else:
+		model.save_weights(modelName)
+		return
 
 def trainedWeightLoader(model,modelName,layerLimit,bigNet):
-    if bigNet:
-        with open(modelName,'rb') as f:
-            weights = pickle.load(f)
-        for layer in model.layers[:layerLimit]:
-        	layer.trainable = True
-            layer.set_weights(weights[layer.name])
-        for layer in model.layers[layerLimit:]:
-        	layer.trainable = False
-    else:
-        model = load_model(modelName)
+	if bigNet:
+		with open(modelName,'rb') as f:
+			weights = pickle.load(f)
+		for layer in model.layers[1:layerLimit]:
+			layer.trainable = True
+			layer.set_weights(weights[layer.name])
+		for layer in model.layers[layerLimit:]:
+			layer.trainable = False
+	else:
+		model = load_model(modelName)
 #######################################################
 #				BOOSTING							 #
 #######################################################
@@ -548,7 +548,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 
 	if bigNet:
 	   current_model=first_layers_reinitializer(full_model,layerLimit)
-    # full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
+	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
 	if train_length==0:
