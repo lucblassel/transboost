@@ -254,7 +254,8 @@ def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwa
 	"""
 	top_model.load_weights(path_to_best_top_model)
 	full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
-	full_model.compile(optimizer = optimizers.Adam(lr=lr_source,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+	sgd = optimizers.SGD(lr=lr_source, decay=1e-6, momentum=0.9, nesterov=True)
+	full_model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	for layer in full_model.layers:
 		layer.trainable = False
 	return full_model
@@ -355,8 +356,8 @@ def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	model.add(Dropout(0.5))
 	model.add(Dense(1))
 	model.add(Activation('sigmoid'))
-
-	model.compile(optimizer = optimizers.Adam(lr=lr_target,amsgrad=True), loss='binary_crossentropy', metrics=['accuracy'])
+	sgd = optimizers.SGD(lr=lr_target, decay=1e-6, momentum=0.9, nesterov=True)
+	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 	return model
 
@@ -542,7 +543,7 @@ def take(tab,indexes):
 #
 # 	return model_list, error_list, alpha_list, current_model
 #
-def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,verbose,**kwargs):
+def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -713,10 +714,10 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
+		model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
-		
+
 	except MemoryError:
 		objects = [o for o in gc.get_objects()]
 		for o in objects:
