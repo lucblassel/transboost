@@ -413,7 +413,7 @@ def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 	model_copy.save_weights(modelName)
 	del model_copy
 
-def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
+def trainedWeightSaverNew_old(model,layerLimit,modelName, bigNet):
 
 	if bigNet :
 		weights = {}
@@ -425,7 +425,14 @@ def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
 		model.save_weights(modelName)
 		return
 
+def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
+	model.save(modelName)
+
 def trainedWeightLoader(model,modelName,layerLimit,bigNet):
+	model = load_model(modelName)
+
+
+def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
 	if bigNet:
 		with open(modelName,'rb') as f:
 			weights = pickle.load(f)
