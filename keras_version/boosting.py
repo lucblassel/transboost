@@ -116,7 +116,7 @@ times = 100
 proba_threshold = .5
 
 #####################################
-# BUILDING MODEL FOR TWO CLASSES	#
+# BUILDING MODEL FOR TWO CLASSES    #
 #####################################
 
 def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
@@ -262,7 +262,7 @@ def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwa
 
 
 ############################################################################
-# TRAINING FIRST LAYERS													#
+# TRAINING FIRST LAYERS                                                 #
 ############################################################################
 
 def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers,**kwargs):
@@ -313,14 +313,14 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 	return model
 
 # def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
-# 	"""
-# 	romain.gautron@agroparistech.fr
-# 	this function trains models from [first_layers_modified_model_builder] function
-# 	"""
-# 	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
-# 	score = model.evaluate_generator(test_generator)
-# 	if verbose:
-# 		print("projector score : ", score)
+#   """
+#   romain.gautron@agroparistech.fr
+#   this function trains models from [first_layers_modified_model_builder] function
+#   """
+#   model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
+#   score = model.evaluate_generator(test_generator)
+#   if verbose:
+#       print("projector score : ", score)
 
 def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
@@ -444,7 +444,7 @@ def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
 	else:
 		model = load_model(modelName)
 #######################################################
-#				BOOSTING							 #
+#               BOOSTING                             #
 #######################################################
 def take(tab,indexes):
 	output = np.zeros(tab.shape)
@@ -474,13 +474,13 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	indexes = list(range(train_length))
 
 	k.clear_session()
-
+	
 	for time in range(times):
 		if verbose:
 			print("="*50)
 			print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
-
+		
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -565,8 +565,8 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 	indexes = list(range(train_length))
 
 	for time in range(times):
-#		print("="*50)
-#		print( "boosting step number "+str(time))
+#       print("="*50)
+#       print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
@@ -624,17 +624,17 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
 			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
 
-		if time < times-1 and not bigNet:
-			del current_model
-			gc.collect() #garbage collector frees up memory (normally)
-			k.clear_session()
+		del current_model
+		gc.collect() #garbage collector frees up memory (normally)
+		k.clear_session()
 
-	return model_list, error_list, alpha_list, current_model
+	return model_list, error_list, alpha_list
 
 def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,layerLimit,bigNet,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
+	k.clear_session()
 	n_samples = len(x)
 	n_models = len(model_list)
 	results = []
@@ -655,7 +655,10 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,layerLimi
 				to_append.append(-1)
 		predicted_class_list.append(to_append)
 		#print("ending prediction for model :",c)
-		c +=1
+		#c +=1
+		del model
+		gc.collect()
+		k.clear_session()
 
 	predicted_class_list = np.array(predicted_class_list)
 	predicted_class_list.reshape((n_models,n_samples))
@@ -724,8 +727,8 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list, model_returned = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
-		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,model_returned,**params)
+		model_list, _ , alpha_list = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
+		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
 
