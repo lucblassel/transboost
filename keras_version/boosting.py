@@ -547,7 +547,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 		#current_model = load_model('full_model.h5')
 
 	if bigNet:
-	   current_model=first_layers_reinitializer(full_model,layerLimit)
+		current_model=first_layers_reinitializer(full_model,layerLimit)
 	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
