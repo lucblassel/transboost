@@ -300,6 +300,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 	"""
 
 	for layer in model.layers[:layerLimit]:
+		layer.trainable = True
 		session = k.get_session()
 		for v in layer.__dict__:
 			v_arg = getattr(layer,v)
@@ -307,17 +308,19 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				initializer_method = getattr(v_arg,'initializer')
 				initializer_method.run(session=session)
 				#print('reinitializing layer {}.{}'.format(layer.name, v))
+	for layer in model.layers[layerLimit:]:
+		layer.trainable = False
 	return model
 
-def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
-	"""
-	romain.gautron@agroparistech.fr
-	this function trains models from [first_layers_modified_model_builder] function
-	"""
-	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
-	score = model.evaluate_generator(test_generator)
-	if verbose:
-		print("projector score : ", score)
+# def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
+# 	"""
+# 	romain.gautron@agroparistech.fr
+# 	this function trains models from [first_layers_modified_model_builder] function
+# 	"""
+# 	model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
+# 	score = model.evaluate_generator(test_generator)
+# 	if verbose:
+# 		print("projector score : ", score)
 
 def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
@@ -454,9 +457,6 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	error_list = []
 	alpha_list = []
 
-	if bigNet:
-		current_model = load_model('full_model.h5')
-
 	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
 
@@ -466,6 +466,8 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	prob = np.repeat(1/train_length, train_length)
 	indexes = list(range(train_length))
 
+	k.clear_session()
+	
 	for time in range(times):
 		if verbose:
 			print("="*50)
@@ -473,10 +475,12 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
 
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
+
 		x_train_boost = take(x_train,train_boost_indexes)
 		y_train_boost = take(y_train,train_boost_indexes)
 
 		if bigNet :
+			current_model = load_model('full_model.h5')
 			current_model = first_layers_reinitializer(current_model,layerLimit)
 		else :
 			current_model = small_net_builder(originalSize,resizeFactor,lr_target)
@@ -523,7 +527,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 
 		prob = prob / np.sum(prob)
 
-		if time < times-1 and not bigNet:
+		if time < times-1 :
 			del current_model
 			gc.collect() #garbage collector frees up memory (normally)
 			k.clear_session()
