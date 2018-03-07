@@ -480,7 +480,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 			print("="*50)
 			print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
-
+		
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -624,10 +624,9 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 			predicted_classes = prediction_boosting(x_test,model_list,alpha_list,current_model,**params_temp)
 			print("time: ",time+1,"accuracy :",accuracy(y_test,predicted_classes))
 
-		if time < times-1 and not bigNet:
-			del current_model
-			gc.collect() #garbage collector frees up memory (normally)
-			k.clear_session()
+		del current_model
+		gc.collect() #garbage collector frees up memory (normally)
+		k.clear_session()
 
 	return model_list, error_list, alpha_list
 
