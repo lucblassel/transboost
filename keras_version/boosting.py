@@ -429,7 +429,7 @@ def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
 	model.save(modelName)
 
 def trainedWeightLoader(model,modelName,layerLimit,bigNet):
-	model = load_model(modelName)
+	return model = load_model(modelName)
 
 
 def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
@@ -643,7 +643,7 @@ def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,layerLimi
 	for model_name in model_list:
 		#print("beginning prediction for model :",c)
 		# model.load_weights(model_name,by_name=True) #loads model weights
-		trainedWeightLoader(model,model_name,layerLimit,bigNet)
+		model = trainedWeightLoader(model_name,layerLimit,bigNet)
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
