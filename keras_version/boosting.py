@@ -416,10 +416,10 @@ def trainedWeightSaver(model,layerLimit,modelName,bigNet):
 def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
 
 	if bigNet :
-	   weights = {}
-	   for layer in model.layers[1:layerLimit]: #ignoring input layer
+		weights = {}
+		for layer in model.layers[1:layerLimit]: #ignoring input layer
 			weights[layer.name] = layer.get_weights()
-	   with open(modelName,'wb') as f:
+		with open(modelName,'wb') as f:
 			pickle.dump(weights,f)
 	else:
 		model.save_weights(modelName)
@@ -467,7 +467,7 @@ def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,thres
 	indexes = list(range(train_length))
 
 	k.clear_session()
-	
+
 	for time in range(times):
 		if verbose:
 			print("="*50)
