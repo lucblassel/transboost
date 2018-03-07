@@ -622,7 +622,7 @@ def batchBooster(full_model,x_train,y_train,x_val,y_val,x_test,y_test,params_tem
 
 	return model_list, error_list, alpha_list
 
-def prediction_boosting(x,model_list, alpha_list,model,proba_threshold,layerLimit,bigNet,**kwargs):
+def prediction_boosting(x,model_list, alpha_list,proba_threshold,layerLimit,bigNet,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -716,8 +716,7 @@ def main():
 		model_list, _ , alpha_list = batchBooster(full_model,x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
-
-
+		
 	except MemoryError:
 		objects = [o for o in gc.get_objects()]
 		for o in objects:
