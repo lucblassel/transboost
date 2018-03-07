@@ -255,10 +255,10 @@ def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwa
 	top_model.load_weights(path_to_best_top_model)
 	full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
 	sgd = optimizers.SGD(lr=lr_source, decay=1e-6, momentum=0.9, nesterov=True)
-	full_model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	for layer in full_model.layers:
 		layer.trainable = False
 	return full_model
+	full_model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 
 
@@ -311,6 +311,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				#print('reinitializing layer {}.{}'.format(layer.name, v))
 	for layer in model.layers[layerLimit:]:
 		layer.trainable = False
+	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
 # def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
