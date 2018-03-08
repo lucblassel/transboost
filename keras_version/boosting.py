@@ -404,15 +404,15 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 def saveModelStructure(modelArchitectuePath,model):
 	architecture = model.to_json()
 	with open(modelArchitectuePath, 'rb') as f:
-        pickle.dump(architecture, f)
+		pickle.dump(architecture, f)
 
 def saveModelWeigths(modelWeigthPath,model):
 	model.save_weights(modelWeigthPath)
 
 def customModelLoader(modelArchitectuePath,modelWeigthPath):
 	with open(modelArchitectuePath, 'rb') as f1:
-        architecture = pickle.load(f1)
-    model  = model_from_json(architecture)
+		architecture = pickle.load(f1)
+	model  = model_from_json(architecture)
 	model.load_weights(modelWeigthPath)
 	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
