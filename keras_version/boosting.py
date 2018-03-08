@@ -311,6 +311,7 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 				#print('reinitializing layer {}.{}'.format(layer.name, v))
 	for layer in model.layers[layerLimit:]:
 		layer.trainable = False
+	sgd = optimizers.SGD(lr=lr_target, decay=1e-6, momentum=0.9, nesterov=True)
 	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
