@@ -19,7 +19,7 @@ class callbackBoosting(keras.callbacks.Callback):
         super(callbackBoosting,self).__init__()
         self.threshold = threshold
         self.metric = metric
-        self.modelPath
+        self.modelPath = modelPath
         self.verbose = verbose
 
     def on_train_end(self, logs={}):
