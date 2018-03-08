@@ -28,7 +28,7 @@ import tensorflow as tf
 from keras import backend as k
 from keras import applications
 from keras import optimizers
-from keras.models import Sequential, Model, load_model
+from keras.models import Sequential, Model, load_model, model_from_json
 from keras.layers import Flatten, Dense, Dropout, GlobalAveragePooling2D, Conv2D, MaxPooling2D, Activation
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
@@ -397,55 +397,76 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 
 	return x_train,y_train,x_val,y_val,x_test,y_test
 
+#######################################################
+#               SAVING PART                           #
+#######################################################
 
-def trainedWeightSaver(model,layerLimit,modelName,bigNet):
-	"""
-	luc blassel
-	saves weights of layers up to layerLimit to modelName file
-	"""
-	model_copy = Sequential()
+def saveModelStructure(modelArchitectuePath,model):
+	architecture = model.to_json()
+	with open(modelArchitectuePath, 'rb') as f:
+        pickle.dump(architecture, f)
 
-	if bigNet :
-		for layer in model.layers[:layerLimit]:
-			model_copy.add(layer)
-	else:
-		for layer in model.layers:
-			model_copy.add(layer)
+def saveModelWeigths(modelWeigthPath,model):
+	model.save_weights(modelWeigthPath)
 
-	model_copy.save_weights(modelName)
-	del model_copy
-
-def trainedWeightSaverNew_old(model,layerLimit,modelName, bigNet):
-
-	if bigNet :
-		weights = {}
-		for layer in model.layers[1:layerLimit]: #ignoring input layer
-			weights[layer.name] = layer.get_weights()
-		with open(modelName,'wb') as f:
-			pickle.dump(weights,f)
-	else:
-		model.save_weights(modelName)
-		return
-
-def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
-	model.save(modelName)
-
-def trainedWeightLoader(modelName,layerLimit,bigNet):
-	model = load_model(modelName)
+def customModelLoader(modelArchitectuePath,modelWeigthPath):
+	with open(modelArchitectuePath, 'rb') as f1:
+        architecture = pickle.load(f1)
+    model  = model_from_json(architecture)
+	model.load_weights(modelWeigthPath)
+	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
 
-def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
-	if bigNet:
-		with open(modelName,'rb') as f:
-			weights = pickle.load(f)
-		for layer in model.layers[1:layerLimit]:
-			layer.trainable = True
-			layer.set_weights(weights[layer.name])
-		for layer in model.layers[layerLimit:]:
-			layer.trainable = False
-	else:
-		model = load_model(modelName)
+# def trainedWeightSaver(model,layerLimit,modelName,bigNet):
+# 	"""
+# 	luc blassel
+# 	saves weights of layers up to layerLimit to modelName file
+# 	"""
+# 	model_copy = Sequential()
+
+# 	if bigNet :
+# 		for layer in model.layers[:layerLimit]:
+# 			model_copy.add(layer)
+# 	else:
+# 		for layer in model.layers:
+# 			model_copy.add(layer)
+
+# 	model_copy.save_weights(modelName)
+# 	del model_copy
+
+# def trainedWeightSaverNew_old(model,layerLimit,modelName, bigNet):
+
+# 	if bigNet :
+# 		weights = {}
+# 		for layer in model.layers[1:layerLimit]: #ignoring input layer
+# 			weights[layer.name] = layer.get_weights()
+# 		with open(modelName,'wb') as f:
+# 			pickle.dump(weights,f)
+# 	else:
+# 		model.save_weights(modelName)
+# 		return
+
+# def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
+# 	model.save(modelName)
+
+# def trainedWeightLoader(modelName,layerLimit,bigNet):
+# 	model = load_model(modelName)
+# 	return model
+
+
+# def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
+# 	if bigNet:
+# 		with open(modelName,'rb') as f:
+# 			weights = pickle.load(f)
+# 		for layer in model.layers[1:layerLimit]:
+# 			layer.trainable = True
+# 			layer.set_weights(weights[layer.name])
+# 		for layer in model.layers[layerLimit:]:
+# 			layer.trainable = False
+# 	else:
+# 		model = load_model(modelName)
+
 #######################################################
 #               BOOSTING                             #
 #######################################################
@@ -457,93 +478,6 @@ def take(tab,indexes):
 		c+=1
 	return output
 
-# def booster(full_model,times,x_train,y_train_bin,epochs,threshold,layerLimit,**kwargs):
-# def booster(full_model,x_train,y_train,x_val,y_val,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,verbose,**kwargs):
-# 	"""
-# 	romain.gautron@agroparistech.fr
-# 	"""
-# 	train_length = len(x_train)
-# 	model_list = []
-# 	error_list = []
-# 	alpha_list = []
-#
-# 	# full_model_name = os.path.join(models_weights_path,'full_model_weights.h5')
-# 	# trainedWeightSaver(full_model,layerLimit,full_model_name)
-#
-# 	if train_length==0:
-# 		raise NameError("length of training set equals 0")
-#
-# 	prob = np.repeat(1/train_length, train_length)
-# 	indexes = list(range(train_length))
-#
-# 	k.clear_session()
-#
-# 	for time in range(times):
-# 		if verbose:
-# 			print("="*50)
-# 			print( "boosting step number "+str(time))
-# 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
-#
-# 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
-#
-# 		x_train_boost = take(x_train,train_boost_indexes)
-# 		y_train_boost = take(y_train,train_boost_indexes)
-#
-# 		if bigNet :
-# 			current_model = load_model('full_model.h5')
-# 			current_model = first_layers_reinitializer(current_model,layerLimit)
-# 		else :
-# 			current_model = small_net_builder(originalSize,resizeFactor,lr_target)
-#
-# 		error = 0
-# 		while error == 1 or error == 0 :
-# 			if bigNet :
-# 				current_model = first_layers_reinitializer(current_model, layerLimit)
-# 			else:
-# 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
-#
-# 			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",verbose)], shuffle=True)
-#
-# 			#error = 1 - current_model.evaluate(x_val, y_val, verbose=0)[1]
-# 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
-#
-# 		alpha = .5*np.log((1-error)/error)
-#
-# 		error_list.append(error)
-# 		# model_list.append(current_model)
-#
-# 		model_list.append(current_model_path)#adds model path to list
-# 		# trainedWeightSaver(current_model,layerLimit,current_model_path,bigNet)
-# 		trainedWeightSaverNew(current_model,layerLimit,current_model_path,bigNet)
-#
-# 		alpha_list.append(alpha)
-#
-# 		predicted_probs = current_model.predict(x_train)
-# 		predicted_classes = []
-#
-# 		# raise MemoryError #TODO REMOVE THIS, TESTING PURPOSES ONLY
-#
-# 		for predicted_prob in predicted_probs:
-# 			if predicted_prob >= proba_threshold:
-# 				predicted_classes.append(1)
-# 			else :
-# 				predicted_classes.append(0)
-#
-# 		for i in range(len(predicted_classes)):
-# 			if predicted_classes[i] == y_train[i]:
-# 				prob[i] = 1/(2*(1-error))
-# 			else:
-# 				prob[i] = 1/(2*error)
-#
-# 		prob = prob / np.sum(prob)
-#
-# 		if time < times-1 :
-# 			del current_model
-# 			gc.collect() #garbage collector frees up memory (normally)
-# 			k.clear_session()
-#
-# 	return model_list, error_list, alpha_list, current_model
-#
 def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,verbose,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
@@ -572,7 +506,7 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 		y_train_boost = take(y_train,train_boost_indexes)
 
 		if bigNet :
-			current_model = load_model('full_model.h5')
+			current_model = customModelLoader("full_model_architecture.json","full_model_weights.h5")
 			current_model = first_layers_reinitializer(current_model,layerLimit)
 		else :
 			current_model = small_net_builder(originalSize,resizeFactor,lr_target)
@@ -580,7 +514,8 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 		error = 0
 		while error == 1 or error == 0 :
 			if bigNet :
-				current_model = first_layers_reinitializer(current_model, layerLimit)
+				current_model = customModelLoader("full_model_architecture.json","full_model_weights.h5")
+				current_model = first_layers_reinitializer(current_model,layerLimit)
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
@@ -593,7 +528,8 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 		error_list.append(error)
 
 		model_list.append(current_model_path) #adds model path to list
-		trainedWeightSaverNew(current_model,layerLimit,current_model_path,bigNet)
+
+		saveModelWeigths(current_model_path,current_model)
 
 		alpha_list.append(alpha)
 
@@ -633,11 +569,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold,layerLimit,bigN
 	n_models = len(model_list)
 	results = []
 	predicted_class_list = []
-	c = 0
+	modelArchitectuePath = "full_model_architecture.json"
 	for model_name in model_list:
-		#print("beginning prediction for model :",c)
-		# model.load_weights(model_name,by_name=True) #loads model weights
-		model = trainedWeightLoader(model_name,layerLimit,bigNet)
+		model = customModelLoader(modelArchitectuePath,model_name)
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
@@ -648,8 +582,6 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold,layerLimit,bigN
 			else:
 				to_append.append(-1)
 		predicted_class_list.append(to_append)
-		#print("ending prediction for model :",c)
-		#c +=1
 		del model
 		gc.collect()
 		k.clear_session()
@@ -711,7 +643,10 @@ def main():
 		top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,**params)
 		top_model_init = top_layer_builder(num_of_classes,**params)
 		full_model = full_model_builder(bottom_model,top_model_init,**params)
-		full_model.save('full_model.h5')
+		
+		saveModelStructure("full_model_architecture.json",full_model)
+		saveModelWeigths("full_model_weights.h5",full_model)
+		k.clear_session()
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
