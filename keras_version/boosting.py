@@ -520,11 +520,11 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",verbose)], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, validation_split = .1, verbose=verbose, callbacks=[callbackBoosting(threshold,"val_acc",current_model_path,verbose)], shuffle=False)
 
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
 
-		saveModelWeigths(current_model_path,current_model)
+		#saveModelWeigths(current_model_path,current_model)
 
 		alpha = .5*np.log((1-error)/error)
 
@@ -652,8 +652,8 @@ def main():
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
 		#model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,**params)
-		model_list= ["model_0.h5","model_1.h5","model_2.h5"]
-		alpha_list =[.5,.5,.5]
+		model_list= ["model_0.h5"]
+		alpha_list =[1]
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
