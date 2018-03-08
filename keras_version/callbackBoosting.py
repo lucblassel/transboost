@@ -30,7 +30,7 @@ class callbackBoosting(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         if logs.get(self.metric) >= self.threshold:
             self.model.stop_training = True
-            self.model.saveModelWeigths(self.modelPath)
+            saveModelWeigths(self.model,self.modelPath)
             if self.verbose:
                 print('stopping training at accuracy = '+str(logs.get(self.metric))+"on epoch number "+str(epoch+1))
         return
