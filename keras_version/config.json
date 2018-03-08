@@ -8,7 +8,7 @@
   "originalSize" : 32,
   "resizeFactor" : 5,
   "batch_size_source" : 10,
-  "batch_size_target" : 10,
+  "batch_size_target" : 200,
   "epochs_source" : 1000,
   "epochs_target" : 1000,
   "classes_source" : ["dog","truck"],
