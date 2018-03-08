@@ -12,12 +12,14 @@ BLASSEL Luc
 """
 
 import keras
+from boosting import saveModelWeigths
 
 class callbackBoosting(keras.callbacks.Callback):
-    def __init__(self,threshold,metric,verbose):
+    def __init__(self,threshold,metric,modelPath,verbose):
         super(callbackBoosting,self).__init__()
         self.threshold = threshold
         self.metric = metric
+        self.modelPath
         self.verbose = verbose
 
     def on_train_end(self, logs={}):
@@ -28,6 +30,7 @@ class callbackBoosting(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         if logs.get(self.metric) >= self.threshold:
             self.model.stop_training = True
+            saveModelWeigths(self.model,self.modelPath)
             if self.verbose:
                 print('stopping training at accuracy = '+str(logs.get(self.metric))+"on epoch number "+str(epoch+1))
         return
