@@ -414,6 +414,7 @@ def customModelLoader(modelArchitecturePath,modelWeigthPath):
 		architecture = pickle.load(f1)
 	model  = model_from_json(architecture)
 	model.load_weights(modelWeigthPath)
+	sgd = optimizers.SGD(lr=lr_target, decay=1e-6, momentum=0.9, nesterov=True)
 	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
