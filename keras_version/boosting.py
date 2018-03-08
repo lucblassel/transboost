@@ -501,7 +501,6 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 #       print("="*50)
 #       print( "boosting step number "+str(time))
 		current_model_path = os.path.join(models_weights_path,"model_"+str(time)+".h5")
-
 		train_boost_indexes = np.random.choice(indexes,p=prob,size=train_length,replace=True)
 
 		x_train_boost = take(x_train,train_boost_indexes)
@@ -521,17 +520,17 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",verbose)], shuffle=True)
+			current_model.fit(x_train_boost, y_train_boost, epochs=epochs_target, validation_split = .1, verbose=verbose, callbacks=[callbackBoosting(threshold,"val_acc",current_model_path,verbose)], shuffle=False)
 
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
+
+		#saveModelWeigths(current_model_path,current_model)
 
 		alpha = .5*np.log((1-error)/error)
 
 		error_list.append(error)
 
 		model_list.append(current_model_path) #adds model path to list
-
-		saveModelWeigths(current_model_path,current_model)
 
 		alpha_list.append(alpha)
 
@@ -562,7 +561,7 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 
 	return model_list, error_list, alpha_list
 
-def prediction_boosting(x,model_list, alpha_list,proba_threshold,layerLimit,bigNet,**kwargs):
+def prediction_boosting(x,model_list, alpha_list,proba_threshold,**kwargs):
 	"""
 	romain.gautron@agroparistech.fr
 	"""
@@ -571,9 +570,9 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold,layerLimit,bigN
 	n_models = len(model_list)
 	results = []
 	predicted_class_list = []
-	modelArchitectuePath = "full_model_architecture.json"
+	modelArchitecturePath = "full_model_architecture.json"
 	for model_name in model_list:
-		model = customModelLoader(modelArchitectuePath,model_name)
+		model = customModelLoader(modelArchitecturePath,model_name)
 		probas = np.array(model.predict(x))
 		booleans = probas >= proba_threshold
 		booleans = list(chain(*booleans))
@@ -652,11 +651,11 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
+		model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		model_list=['models_weights/model_0.h5']
 		alpha_list=[1]
 		predicted_classes = prediction_boosting(x_train_target,model_list,alpha_list,**params)
 		print("Final accuracy train:",accuracy(y_train_target,predicted_classes))		
-		#model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
