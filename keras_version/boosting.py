@@ -652,7 +652,11 @@ def main():
 
 		#2nd part
 		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
+		model_list=['/model_weights/model_0.h5']
+		alpha_list=[1]
+		predicted_classes = prediction_boosting(x_train_target,model_list,alpha_list,**params)
+		print("Final accuracy train:",accuracy(y_train_target,predicted_classes))		
+		#model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
 		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
 		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
