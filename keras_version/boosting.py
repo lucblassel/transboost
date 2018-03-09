@@ -278,7 +278,7 @@ def fine_tune_builder(based_model_last_block_layer_number,lr_source,**kwargs):
 def fine_tune_trainer(model,train_generator_source,validation_generator_source,test_generator_source,path_to_best_model,lr_source,epochs_source,batch_size_source,**kwargs):
 	earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=10, verbose=1, mode='auto')
 	checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_acc', verbose=1, save_best_only=True, period=1,mode='max')
-	model.fit_generator(train_generator_source,validation_data=validation_generator_source,verbose=1,callbacks=[earlystop,checkpoint])
+	model.fit_generator(train_generator_source,validation_data=validation_generator_source,verbose=1,callbacks=[earlystop,checkpoint],epochs=epochs_source)
 	score = model.evaluate_generator(test_generator_source)
 	print(model.metrics_names,score)
 
