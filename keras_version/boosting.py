@@ -260,40 +260,28 @@ def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwa
 	return full_model
 	full_model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
+def fine_tune_builder(based_model_last_block_layer_number,lr_source,**kwargs):
+	k.clear_session()
+	model = customModelLoader("full_model_architecture.json","full_model_weights.h5")
+	for layer in model.layers[:based_model_last_block_layer_number]:
+		layer.trainable = False
+	for layer in model.layers[based_model_last_block_layer_number:]:
+		layer.trainable = True
+	adam = optimizers.Adam(lr=lr_source, amsgrad=True)
+	model.compile(optimizer = adam, loss='binary_crossentropy', metrics=['accuracy'])
+	return model
 
+def fine_tune_trainer(model,train_generator_source,validation_generator_source,test_generator_source,path_to_best_model,lr_source,**kwargs):
+	earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=5, verbose=1, mode='auto')
+	checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_acc', verbose=1, save_best_only=True, period=1,mode='max')
+	model.fit_generator(train_generator_source,validation_data=validation_generator_source,verbose=1)
+	score = model.evaluate_generator(test_generator_source)
+	print(model.metrics_names,score)
 
+	
 ############################################################################
 # TRAINING FIRST LAYERS                                                 #
 ############################################################################
-
-def first_layers_modified_model_builder(model,layerLimit,reinitialize_bottom_layers,**kwargs):
-	"""
-	romain.gautron@agroparistech.fr
-
-	this function changes a model whose first layers are trainable with reinitialized weights
-	INPUTS :
-	- model to modifiy
-	- layerLimit : limit of the first layer to modify (see layer.name)
-	OUTPUTS :
-	- copy of the modified model
-	"""
-	model_copy =  cp.deepcopy(model)
-	for layer in model_copy.layers[:layerLimit]:
-
-		session = k.get_session()
-		layer.trainable = True
-		if reinitialize_bottom_layers :
-			for v in layer.__dict__:
-				v_arg = getattr(layer,v)
-				if hasattr(v_arg,'initializer'):
-					initializer_method = getattr(v_arg, 'initializer')
-					initializer_method.run(session=session)
-					#print('reinitializing layer {}.{}'.format(layer.name, v))
-
-	for layer in model_copy.layers[layerLimit:]:
-		layer.trainable = False
-
-	return model_copy
 
 def first_layers_reinitializer(model,layerLimit,**kwargs):
 	"""
@@ -314,16 +302,6 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 	sgd = optimizers.SGD(lr=lr_target, decay=1e-6, momentum=0.9, nesterov=True)
 	model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
-
-# def first_layers_modified_model_trainer(model,train_generator,validation_generator,test_generator,epochs,threshold,verbose,**kwargs):
-#   """
-#   romain.gautron@agroparistech.fr
-#   this function trains models from [first_layers_modified_model_builder] function
-#   """
-#   model.fit_generator(train_generator, epochs=epochs, verbose=1, callbacks=[callbackBoosting(threshold,"val_acc")], validation_data=validation_generator, use_multiprocessing=False, shuffle=True)
-#   score = model.evaluate_generator(test_generator)
-#   if verbose:
-#       print("projector score : ", score)
 
 def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
@@ -420,55 +398,6 @@ def customModelLoader(modelArchitecturePath,modelWeigthPath):
 	model.compile(optimizer = adam, loss='binary_crossentropy', metrics=['accuracy'])
 	return model
 
-
-# def trainedWeightSaver(model,layerLimit,modelName,bigNet):
-# 	"""
-# 	luc blassel
-# 	saves weights of layers up to layerLimit to modelName file
-# 	"""
-# 	model_copy = Sequential()
-
-# 	if bigNet :
-# 		for layer in model.layers[:layerLimit]:
-# 			model_copy.add(layer)
-# 	else:
-# 		for layer in model.layers:
-# 			model_copy.add(layer)
-
-# 	model_copy.save_weights(modelName)
-# 	del model_copy
-
-# def trainedWeightSaverNew_old(model,layerLimit,modelName, bigNet):
-
-# 	if bigNet :
-# 		weights = {}
-# 		for layer in model.layers[1:layerLimit]: #ignoring input layer
-# 			weights[layer.name] = layer.get_weights()
-# 		with open(modelName,'wb') as f:
-# 			pickle.dump(weights,f)
-# 	else:
-# 		model.save_weights(modelName)
-# 		return
-
-# def trainedWeightSaverNew(model,layerLimit,modelName, bigNet):
-# 	model.save(modelName)
-
-# def trainedWeightLoader(modelName,layerLimit,bigNet):
-# 	model = load_model(modelName)
-# 	return model
-
-
-# def trainedWeightLoader_old(model,modelName,layerLimit,bigNet):
-# 	if bigNet:
-# 		with open(modelName,'rb') as f:
-# 			weights = pickle.load(f)
-# 		for layer in model.layers[1:layerLimit]:
-# 			layer.trainable = True
-# 			layer.set_weights(weights[layer.name])
-# 		for layer in model.layers[layerLimit:]:
-# 			layer.trainable = False
-# 	else:
-# 		model = load_model(modelName)
 
 #######################################################
 #               BOOSTING                             #
@@ -633,6 +562,7 @@ def main():
 	print("\n\n\n")
 
 	num_of_classes = len(params['classes_source'])
+	based_model_last_block_layer_number = 132
 
 	checkDir(params['models_path'])
 	checkDir(params['models_weights_path'])
@@ -648,17 +578,22 @@ def main():
 		
 		saveModelStructure("full_model_architecture.json",full_model)
 		saveModelWeigths("full_model_weights.h5",full_model)
+		del full_model
+		gc.collect()
 		k.clear_session()
 
+		model = fine_tune_builder(based_model_last_block_layer_number,**params)
+		fine_tune_trainer(model,train_generator_source,validation_generator_source,test_generator_source,**params)
+		
 		#2nd part
-		x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
-		model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
-		model_list=['models_weights/model_0.h5']
-		alpha_list=[1]
-		predicted_classes = prediction_boosting(x_train_target,model_list,alpha_list,**params)
-		print("Final accuracy train:",accuracy(y_train_target,predicted_classes))		
-		predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
-		print("Final accuracy :",accuracy(y_test_target,predicted_classes))
+		# x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
+		# model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
+		# model_list=['models_weights/model_0.h5']
+		# alpha_list=[1]
+		# predicted_classes = prediction_boosting(x_train_target,model_list,alpha_list,**params)
+		# print("Final accuracy train:",accuracy(y_train_target,predicted_classes))		
+		# predicted_classes = prediction_boosting(x_test_target,model_list,alpha_list,**params)
+		# print("Final accuracy :",accuracy(y_test_target,predicted_classes))
 
 	except MemoryError:
 		objects = [o for o in gc.get_objects()]
