@@ -18,7 +18,7 @@
   "lr_source" : 0.0001,
   "lr_target" : 0.0001,
   "step" : 3,
-  "recompute_transfer_values" : true,
+  "recompute_transfer_values" : false,
   "train_top_model" : true,
   "reinitialize_bottom_layers" : false,
   "bigNet" : true,
