@@ -94,12 +94,12 @@ path_to_best_top_model = "best_top_model.hdf5"
 # valNum_source = 2040
 # testNum_source = 2040
 
-trainNum_target = 8010 
-valNum_target = 1980 
-testNum_target = 1980 
-trainNum_source = 8010 
-valNum_source = 1980 
-testNum_source = 1980 
+trainNum_target = 8010
+valNum_target = 1980
+testNum_target = 1980
+trainNum_source = 8010
+valNum_source = 1980
+testNum_source = 1980
 
 lr_source = 0.0001
 epochs_source = 10
