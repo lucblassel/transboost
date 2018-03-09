@@ -28,7 +28,15 @@ import zipfile
 def _print_download_progress(count, block_size, total_size):
     """
     Function used for printing the download progress.
-    Used as a call-back function in maybe_download_and_extract().
+	Used as a call-back function in maybe_download_and_extract().
+
+	#Input
+	count: Current number of data block being downloaded. 
+	block_size: Size of the data block.
+	total_size: Total size of data.
+
+	#Output
+	Nothing
     """
 
     # Percentage completion.
@@ -47,19 +55,15 @@ def _print_download_progress(count, block_size, total_size):
 
 def maybe_download_and_extract(url, download_dir):
     """
-    Download and extract the data if it doesn't already exist.
-    Assumes the url is a tar-ball file.
-
-    :param url:
-        Internet URL for the tar-file to download.
-        Example: "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
-
-    :param download_dir:
-        Directory where the downloaded file is saved.
-        Example: "data/CIFAR-10/"
-
-    :return:
-        Nothing.
+    Download and extract the data if it doesn't exist yet.
+	
+	#Input
+	url: Internet URL for the tar-file to download.
+		 Example: "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
+	download_dir: Directory where the downloaded file is saved.
+				  Example: "data/CIFAR-10/"
+	#Output:
+	Nothing
     """
 
     # Filename for saving the file downloaded from the internet.

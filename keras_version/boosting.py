@@ -49,7 +49,7 @@ k.tensorflow_backend.set_session(tf.Session(config=config))
 
 def getArgs():
 	"""
-	gets the parameters from config file
+	gets the parameters from configuration file
 	"""
 	if len(sys.argv)==1:
 		print("please specify path of config file...")
@@ -60,6 +60,13 @@ def getArgs():
 
 # checks if models directory already exists, and iuf not creates it
 def checkDir(dataPath):
+	"""
+	checks if model's directory already exists, and if not creates it
+	#Input: 
+	dataPath: The directory of model's path
+	#Output: 
+	A string : if the path does not exist, it prints ‘creating’; otherwise ‘exists already’
+	"""
 	if not os.path.exists(dataPath):
 		print("creating" ,dataPath, "directory")
 		os.makedirs(dataPath)
@@ -67,6 +74,13 @@ def checkDir(dataPath):
 		print("directory {} exists already.".format(dataPath))
 
 def printParams(params):
+	"""
+	Prints parameters from configuration
+	#Input:
+	Params: parameters from the configuration file
+	#Output:
+	Print the each parameters.
+	"""
 	for param in params:
 		print(param+" : ",params[param])
 
@@ -125,7 +139,12 @@ proba_threshold = .5
 
 def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Builds the bottom layers of model for the domain of source. It uses the Xception model. 
+	#Input:
+	originalSize: the original size of images
+	resizeFactor: value that represents the image resize factor
+	#Output:
+	Model: the model of bottom layers with Xception
 	"""
 	img_size = originalSize*resizeFactor
 
@@ -143,7 +162,20 @@ def bottom_layers_builder(originalSize,resizeFactor,**kwargs):
 
 def create_generators(path_to_train,path_to_validation,classes_source,batch_size_source,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Creates generators. Adds noises (rotations, zoom, etc.) in the data and makes the binarization for the labels. 
+	#Input:
+	Path_to_train: the path of train set 
+	path_to_validation: the path of validation set
+	classes_source: classes to train from domain of source
+	batch_size_source: the size of batch of domain source
+	originalSize: the original size of images
+	resizeFactor: value that represents the image resize factor
+	transformation_ratio: the ratio of transformation when rotates, shears and zooms	
+	Output:
+	Train_generator : the train set after the generation of the data 
+	validation_generator: the validation set after the generation of the data
+	test_generator: the test set after the generation of the data
+
 	"""
 	img_size = originalSize*resizeFactor
 
@@ -181,7 +213,22 @@ def create_generators(path_to_train,path_to_validation,classes_source,batch_size
 
 def save_bottleneck_features(model,train_generator,validation_generator,test_generator,trainNum,valNum,testNum,batch_size_source,recompute_transfer_values,verbose,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Saves the bottleneck features of train set, validation set and test set in a file on hard disc. It uses the data from generators to train and get the result from training the model which are the transfer values. 
+	
+	#Inputs:
+	Model: model to train the data 
+	Train_generator : the train set after the generation of the data 
+	validation_generator: the validation set after the generation of the data
+	test_generator: the test set after the generation of the data
+	trainNum: the number of examples to train in the train set
+	valNum: the number of examples to train in the validation set
+	testNum: the number of examples to train in the test set
+	batch_size_source: the size of batch from the domain of source
+	recompute_transfer_values: a Boolean whether the transfer values have been recomputed or not. It is False as initialization. 
+	Verbose: a Boolean to control whether to print some details or not. 
+	
+	#Output:
+	A npy file with all the bottleneck values.
 	"""
 	file1 = Path('bottleneck_features_train.npy')
 	if not file1.is_file() or recompute_transfer_values:
@@ -207,7 +254,12 @@ def save_bottleneck_features(model,train_generator,validation_generator,test_gen
 
 def top_layer_builder(num_of_classes,lr_source,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Builds the top layer of the model of domain of source. The top layer classifies the inputs. It has 6 layers and it turns the 2048 neurons into 2 neurons which presents the labels of inputs. 
+	#Input:
+	num_of_classes: the number of classes of the results 
+	lr_source: the learning rate of source
+	#Output
+	Model: the model of the top layers 
 	"""
 	train_data = np.load(open('bottleneck_features_train.npy',"rb"))
 	model = Sequential()
@@ -223,7 +275,25 @@ def top_layer_builder(num_of_classes,lr_source,**kwargs):
 
 def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validation_generator,test_generator,batch_size_source,path_to_best_model,epochs_source,train_top_model,verbose,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Trains the model of top layers. Changes the values inside the architecture of the model and saves the model
+	
+	#Input:
+	top_model: the model of top layers
+	trainNum: the number of examples to train in the train set
+	valNum: the number of examples to train in the validation set
+	testNum: the number of examples to train in the test set
+	Train_generator : the train set after the generation of the data 
+	validation_generator: the validation set after the generation of the data
+	test_generator: the test set after the generation of the data
+	batch_size_source: the size of batch of the domain of source
+	path_to_best_model: the path to load the best model
+	epochs_source: the epochs of the domain of source
+	train_top_model: a Boolean to justify whether the model has been trained or not, which is False as initialization
+	Verbose: a Boolean to control whether to print some details or not. 
+	
+	#Output:
+	Print the values of the model
+
 	"""
 	file_exists = False
 	file = Path(path_to_best_model)
@@ -254,7 +324,17 @@ def top_layer_trainer(top_model,trainNum,valNum,testNum,train_generator,validati
 
 def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Builds the fullmodel by combining the top layers and the bottom layers together. It loads the weights from the hard disc. 
+	
+	#Inputs:
+	bottom_model: the bottom model has been constructed before
+	top_model: the top model of the domain of source
+	lr_source: the learning rate of domain of source
+	path_to_best_model: path of reading the best model
+	
+	#Output:
+	Full_model: the best full model from the domain of source
+
 	"""
 	top_model.load_weights(path_to_best_top_model)
 	full_model = Model(inputs= bottom_model.input, outputs= top_model(bottom_model.output))
@@ -265,6 +345,15 @@ def full_model_builder(bottom_model,top_model,lr_source,path_to_best_model,**kwa
 	full_model.compile(optimizer = sgd, loss='binary_crossentropy', metrics=['accuracy'])
 
 def fine_tune_builder(based_model_last_block_layer_number,lr_source,**kwargs):
+	"""
+	Builds a fine tuning model. It uses the values by using the previous model of domain of source. 
+	#Inputs: 
+	based_model_last_block_layer_number: the number of layers from the bottom model which will be blocked 
+	lr_source: the learning rate of domain of source
+	#Output:
+	Model: the model of fine-tune 
+	"""
+	
 	k.clear_session()
 	model = customModelLoader("full_model_architecture.json","full_model_weights.h5")
 	for layer in model.layers[:based_model_last_block_layer_number]:
@@ -276,6 +365,23 @@ def fine_tune_builder(based_model_last_block_layer_number,lr_source,**kwargs):
 	return model
 
 def fine_tune_trainer(model,train_generator_source,validation_generator_source,test_generator_source,path_to_best_model,lr_source,epochs_source,batch_size_source,**kwargs):
+	
+	"""
+	Trains the fine tune model. 
+	
+	#Input:
+	Model: model to train the data 
+	train_generator_source: the train set after the generation of the data from domain of source 
+	validation_generator_source: the validation set after the generation of the data from domain of source 
+	test_generator_source: the test set after the generation of the data from the domain of source
+	path_to_best_model: the path of the best model
+	lr_source: the learning rate of domain of source
+	epochs_source: epoch of the domain of source. 
+	
+	#Output
+	the trained model which has the same architecture of precedent model but with different weights. 
+	"""
+	
 	earlystop = EarlyStopping(monitor='val_acc', min_delta=0.0001, patience=10, verbose=1, mode='auto')
 	checkpoint = ModelCheckpoint(path_to_best_model, monitor='val_acc', verbose=1, save_best_only=True, period=1,mode='max')
 	model.fit_generator(train_generator_source,validation_data=validation_generator_source,verbose=1,callbacks=[earlystop,checkpoint],epochs=epochs_source)
@@ -289,6 +395,11 @@ def fine_tune_trainer(model,train_generator_source,validation_generator_source,t
 def first_layers_reinitializer(model,layerLimit,**kwargs):
 	"""
 	re-initializes weights of layers up to layerLimit
+	#Input:
+	model:  the full model
+	layerLimit: the number of layer which will be blocked
+	#Output:
+	model: the model which has been initialized
 	"""
 
 	for layer in model.layers[:layerLimit]:
@@ -308,7 +419,13 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 
 def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Build a simple CNN of 3 convolutional layers and 3 fully connected layers with dropout 
+	#Input:
+	originalSize: the original size of images
+	resizeFactor: the resize factor 
+	lr_target: learning rate of domain of target 
+	#Output:
+	model : the small CNN model
 	"""
 	img_size = originalSize*resizeFactor
 
@@ -346,7 +463,19 @@ def small_net_builder(originalSize,resizeFactor,lr_target,**kwargs):
 
 def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,testNum,classes_target,originalSize,resizeFactor,transformation_ratio,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Generate image data batches in array format, return training, validation and test datasets
+	#Input:
+	path_to_train: the path to the train set 
+	path_to_validation: the path to the validation set 
+	trainNum: the number of train examples
+	valNum: the number of validation examples
+	testNum: the number of test examples
+	classes_target: the classes of target domain
+	originalSize: the original size of image
+	resizeFactor: the resize factor
+	transformation_ratio: the ratio of transformation for rotation, zoom, etc. 
+	#Output:
+	x_train,y_train,x_val,y_val,x_test,y_test: the X, Y arrays of train, validation, test set. 
 	"""
 	img_size = originalSize*resizeFactor
 
@@ -384,14 +513,40 @@ def from_generator_to_array(path_to_train,path_to_validation,trainNum,valNum,tes
 #######################################################
 
 def saveModelStructure(modelArchitecturePath,model):
+	"""
+	Save a model structure and its path
+	#Input:
+	modelArchitecturePath: the path of model's architecture
+	model: the new model
+	#Output:
+	save the model into a file
+	"""
+	
 	architecture = model.to_json()
 	with open(modelArchitecturePath, 'wb') as f:
 		pickle.dump(architecture, f)
 
 def saveModelWeigths(modelWeigthPath,model):
+	"""
+	Save a model’s weights and its path
+	#Input:
+	modelWeigthPath: the path of model's weights
+	model
+	#Output
+	save the path 
+	"""
+	
 	model.save_weights(modelWeigthPath)
 
 def customModelLoader(modelArchitecturePath,modelWeigthPath):
+	"""
+	Load a model with its architecture and its weights
+	#Input:
+	modelArchitecturePath: the path of model's architecture
+	modelWeigthPath: the path of model's weights
+	#Output 
+	model: loaded model
+	"""
 	with open(modelArchitecturePath, 'rb') as f1:
 		architecture = pickle.load(f1)
 	model  = model_from_json(architecture)
@@ -406,6 +561,14 @@ def customModelLoader(modelArchitecturePath,modelWeigthPath):
 #               BOOSTING                             #
 #######################################################
 def take(tab,indexes):
+	"""
+	Reorder the table based on indexes, return the new table
+	#Input:
+	tab: table
+	indexes:  the indexes of tables
+	#output
+	output: the new table
+	"""
 	output = np.zeros(tab.shape)
 	c=0
 	for i in indexes:
@@ -415,7 +578,37 @@ def take(tab,indexes):
 
 def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_target,lr_target,batch_size_target,threshold,layerLimit,times,bigNet,originalSize,resizeFactor,proba_threshold,step,verbose,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Conduct the transboost process and obtain a list of weak trained models.
+
+	#Input
+	x_train: Array of training data
+	y_train: Array of training data label values
+	x_val: Array of validation data
+	y_val: Array of validation data label values
+	x_test: Array of test data
+	y_test: Array of test data label values
+	params_temp: Dictoinary with configs of the experiment
+	epochs_target: Maximal epoches for a training process on the same dataset
+	lr_target: Learning rate for the training on the target dataset
+	batch_size_target: Size of batch for training data
+	threshold: Threshold for distinguish if a weak model has been obtained
+			   The training process won't stop until the validation accuracy is above the threshold.
+	layerLimit: Integer value for marking which layers are trainable.
+	times: Repetition times, each time a weak model is obtained.
+	bigNet: Boolean value to decide on which net the experiment works
+	originalSize: Original size of data image
+	resizeFactor: Factor used to resize the image size
+	proba_threshold: Threshold for distinguish which class the data belongs to. 
+					 If the prediction proba is above the threshold, the data is predicted as Class 1, else as Class 2.
+	step: Integer value, for every "step" repititions, we see the progress of the model's performance
+	verbose: Boolean value to control the display of printing words in the console.
+
+	#Output
+	model_list: List containing all trained models' path which are stocked in the disk.
+	error_list: List containing the training errors related to each trained model.
+	alpha_list: List of weights related to each model.
+    It is used when making a weighted linear combination of each weak model as the final strong model.
+
 	"""
 	train_length = len(x_train)
 	model_list = []
@@ -496,8 +689,20 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 
 def prediction_boosting(x,model_list, alpha_list,proba_threshold,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
-	"""
+	Give prediction of classes which the test data belong to from the trained models.
+	Used with accuracy() in batchBooster() to see the progress of the model's performance while training and in main function to see the final model's performance.
+
+	#Input
+	x: Array of test data.
+	model_list: List of trained and stocked models' paths.
+	alpha_list: List of weights related to each model.
+				It is used when making a weighted linear combination of each weak model as the final strong model.
+	proba_threshold: Threshold for distinguish which class the data belongs to. 
+					 If the prediction proba is above the threshold, the data is predicted as Class 1, else as Class 2.
+
+	#Output
+	results: Array of predicted label values matching the test data
+		"""
 	k.clear_session()
 	n_samples = len(x)
 	n_models = len(model_list)
@@ -535,7 +740,15 @@ def prediction_boosting(x,model_list, alpha_list,proba_threshold,**kwargs):
 
 def accuracy(y_true,y_pred,**kwargs):
 	"""
-	romain.gautron@agroparistech.fr
+	Mesure the accuracy of prediction from the trained model.
+	Used in batchBooster() to see the progress of the model's performance while training and in main function to see the final model's performance.
+
+	#Input
+	y_true: Array of real label values matching the test data.
+	y_pred: Array of predicted label values matching the test data.
+
+	#Output
+	accuracy: Accuracy of prediction.
 	"""
 	if isinstance(y_true,np.ndarray):
 		y_true = y_true.tolist()
@@ -549,7 +762,8 @@ def accuracy(y_true,y_pred,**kwargs):
 	return accuracy
 
 def main():
-	""" this function stands for testing purposes
+	""" 
+	this function stands for testing purposes
 	"""
 
 	dt = datetime.now()
