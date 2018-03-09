@@ -90,12 +90,15 @@ path_to_test = path + "test"
 path_to_best_top_model = "best_top_model.hdf5"
 
 #TODO automatise counting of these numbers
-trainNum_source = 7950
-valNum_source = 2040
-testNum_source = 2040
+# trainNum_source = 7950
+# valNum_source = 2040
+# testNum_source = 2040
 trainNum_target = 8010
 valNum_target = 1980
 testNum_target = 1980
+trainNum_source = 8010
+valNum_source = 1980
+testNum_source = 1980
 
 lr_source = 0.0001
 epochs_source = 10
@@ -583,7 +586,10 @@ def main():
 
 		model = fine_tune_builder(based_model_last_block_layer_number,**params)
 		fine_tune_trainer(model,train_generator_source,validation_generator_source,test_generator_source,**params)
-		
+		del model
+		gc.collect()
+		k.clear_session()
+
 		#2nd part
 		# x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target = from_generator_to_array(path_to_train,path_to_validation,trainNum_target,valNum_target,testNum_target,**params)
 		# model_list, _ , alpha_list = batchBooster(x_train_target,y_train_target,x_val_target,y_val_target,x_test_target,y_test_target,params,**params)
