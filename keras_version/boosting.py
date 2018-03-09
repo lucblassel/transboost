@@ -278,9 +278,8 @@ def fine_tune_trainer(model,train_generator_source,validation_generator_source,t
 	score = model.evaluate_generator(test_generator_source)
 	print(model.metrics_names,score)
 
-	
 ############################################################################
-# TRAINING FIRST LAYERS                                                 #
+# Initializer FIRST LAYERS                                                #
 ############################################################################
 
 def first_layers_reinitializer(model,layerLimit,**kwargs):
@@ -290,12 +289,12 @@ def first_layers_reinitializer(model,layerLimit,**kwargs):
 
 	for layer in model.layers[:layerLimit]:
 		layer.trainable = True
-		session = k.get_session()
-		for v in layer.__dict__:
-			v_arg = getattr(layer,v)
-			if hasattr(v_arg,'initializer'):
-				initializer_method = getattr(v_arg,'initializer')
-				initializer_method.run(session=session)
+#		session = k.get_session()
+#		for v in layer.__dict__:
+#			v_arg = getattr(layer,v)
+#			if hasattr(v_arg,'initializer'):
+#				initializer_method = getattr(v_arg,'initializer')
+#				initializer_method.run(session=session)
 				#print('reinitializing layer {}.{}'.format(layer.name, v))
 	for layer in model.layers[layerLimit:]:
 		layer.trainable = False
