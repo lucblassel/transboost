@@ -571,9 +571,9 @@ def main():
 	checkDir(params['models_weights_path'])
 
 	try:
-		# bottom_model = bottom_layers_builder(**params)
-		# train_generator_source,validation_generator_source,test_generator_source = create_generators(path_to_train,path_to_validation,**params)
-		# save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,**params)
+		bottom_model = bottom_layers_builder(**params)
+		train_generator_source,validation_generator_source,test_generator_source = create_generators(path_to_train,path_to_validation,**params)
+		save_bottleneck_features(bottom_model,train_generator_source,validation_generator_source,test_generator_source,trainNum_source,valNum_source,testNum_source,**params)
 		# top_model = top_layer_builder(num_of_classes,**params)
 		# top_layer_trainer(top_model,trainNum_source,valNum_source,testNum_source,train_generator_source,validation_generator_source,test_generator_source,**params)
 		# top_model_init = top_layer_builder(num_of_classes,**params)
