@@ -453,7 +453,7 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 			else:
 				current_model = small_net_builder(originalSize,resizeFactor,lr_target)
 
-			current_model.fit(x_train_boost, y_train_boost, batch_size = batch_size_target, epochs=epochs_target, validation_split = .1, verbose=verbose, callbacks=[callbackBoosting(threshold,"val_acc",current_model_path,verbose)], shuffle=False)
+			current_model.fit(x_train_boost, y_train_boost, batch_size = batch_size_target, epochs=epochs_target, validation_split = .1, verbose=verbose, callbacks=[callbackBoosting(threshold,"acc",current_model_path,verbose)], shuffle=False)
 
 			error = 1 - current_model.evaluate(x_train, y_train, verbose=0)[1]
 
