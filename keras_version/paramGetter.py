@@ -14,10 +14,30 @@ parameter getter
 import json
 
 def reader(filepath):
+	'''
+	Get parameters from a json file.
+	Used in getArgs() in boosting.py.
+
+	#Input
+	filepath: Path of json file.
+
+	#Output
+	data: Dictionary of parameters with their labels.
+	'''
     data = json.load(open(filepath))
     return data
 
 def switchParams(data):
+	'''
+	Exchange parameters between two datasets with different labels.
+	Not used currently.
+
+	#Input
+	data: Dictionary of parameters with their labels.
+
+	#Output
+	Nothing
+	'''
     tmpTrain = data['trainLabels']
     tmpTest = data['testLabels']
     tmpNumtrain = data['trainNum']

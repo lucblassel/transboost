@@ -22,6 +22,7 @@ import pickle
 import os
 from sklearn.model_selection import train_test_split
 
+
 file_path = "batches.meta" #file with the labels
 resizeFactor = 5 #to resize cifar10 images
 
@@ -29,7 +30,8 @@ def load_class_names():
     """
     Load the names for the classes in the CIFAR-10 data-set.
 
-    Returns a list with the names. Example: names[3] is the name
+    #Output:
+	A list with the names. Example: names[3] is the name
     associated with class-number 3.
     (taken from cifar10.py, modified by luc blassel)
     """
@@ -52,6 +54,10 @@ def load_class_names():
 def getLabelIndexes(labels):
     """
     gets label int from string
+	#Input:
+	labels : the label of class 
+	#output:
+	ind : the index 
     """
     ind = np.zeros((len(labels)),dtype=np.int)
     names = load_class_names()
@@ -121,8 +127,14 @@ def loadTestingData(test,labels,testCases):
 
 def validationSplitter(x,y,proportion,shuffle):
     """
-    returns x_train,x_val,y_train,y_val
-    if shuffle is true training set is shuffled before splitting
+	Splits the data
+	#input: 
+	x: the pixels of images
+	y: the labels of images
+	proportion: the proportion
+	shuffle: a boolean to control whether to shuffle the images or not,if shuffle is true training set is shuffled before splitting
+    #Output
+	returns x_train,x_val,y_train,y_val
     """
     return train_test_split(x,y,proportion,shuffle=shuffle)
 

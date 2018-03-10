@@ -14,6 +14,15 @@ import sys
 ############################################################################
 
 def readConfigs():
+	"""
+	Read configurations from json file. In this json file, it defines the values of some parameters that we will use in the other functions. 
+	Run the program of boosting to get the results. 
+	#Input:
+	No argument, but it will read the directory to find the json file. 
+	#Output:
+	The results of running boosting.py
+	"""
+
     if len(sys.argv) <= 1:
         print("please specify path to config batch...")
         sys.exit()

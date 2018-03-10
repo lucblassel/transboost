@@ -15,7 +15,12 @@ import numpy as np
 
 def binarise(y):
     """
-    Binarises y vectors with one hot encoding
+    Binarize the labels vectors (y) with one hot encoding. 
+	#Input:
+	y: the arrays of the labels of classes in a format of array without duplicated.
+	#Outputs:
+	A binarized vector in a format [[0,1], [1,0],[0,1]…]
+
     """
     unique = np.unique(y)
     if len(unique) >2:
@@ -38,6 +43,13 @@ def binarise(y):
     return binarised
 
 def main():
+	"""
+	Binarize  y_train set with one hot code.
+	#Input:
+	No Input. 
+	#Output:
+	Print the original array and binarized array of y_train. 
+	"""
     labels = ['dog','truck']
     trainNum = 10
 
