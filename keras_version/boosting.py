@@ -657,7 +657,6 @@ def batchBooster(x_train,y_train,x_val,y_val,x_test,y_test,params_temp,epochs_ta
 		error_list.append(error)
 
 		model_list.append(current_model_path) #adds model path to list
-
 		alpha_list.append(alpha)
 
 		predicted_probs = current_model.predict(x_train)
