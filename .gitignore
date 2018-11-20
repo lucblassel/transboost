@@ -12,7 +12,7 @@ train/
 
 # image files
 # *.png
-# *.svg
+*.svg
 *.jpg
 
 
