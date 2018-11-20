@@ -13,8 +13,8 @@
 \usepackage{tikz-qtree}
 \usepackage{listings}
 \usepackage{graphicx}
-\usepackage{algorithm2e}
-\usepackage[left=2cm,right=2cm,top=1.5cm,bottom=1.5cm]{geometry}
+\usepackage[ruled]{algorithm2e}
+\usepackage[left=2.5cm,right=2.5cm,top=1.5cm,bottom=1.5cm]{geometry}
 \usepackage[toc,page]{appendix}
 \usepackage{hyperref}
 \hypersetup{
@@ -27,18 +27,54 @@
 \usepackage{appendix}
 \usepackage{enumitem}           % modified itemize
 \usepackage{float}
+\usepackage{xcolor}
+\usepackage{listings}
+\lstdefinelanguage{json}{
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    numberstyle=\scriptsize,
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=lines,
+    backgroundcolor=\color{background},
+    literate=
+     *{0}{{{\color{numb}0}}}{1}
+      {1}{{{\color{numb}1}}}{1}
+      {2}{{{\color{numb}2}}}{1}
+      {3}{{{\color{numb}3}}}{1}
+      {4}{{{\color{numb}4}}}{1}
+      {5}{{{\color{numb}5}}}{1}
+      {6}{{{\color{numb}6}}}{1}
+      {7}{{{\color{numb}7}}}{1}
+      {8}{{{\color{numb}8}}}{1}
+      {9}{{{\color{numb}9}}}{1}
+      {:}{{{\color{punct}{:}}}}{1}
+      {,}{{{\color{punct}{,}}}}{1}
+      {\{}{{{\color{delim}{\{}}}}{1}
+      {\}}{{{\color{delim}{\}}}}}{1}
+      {[}{{{\color{delim}{[}}}}{1}
+      {]}{{{\color{delim}{]}}}}{1},
+}
+\colorlet{punct}{red!60!black}
+\definecolor{background}{HTML}{FFFFFF}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{numb}{magenta!60!black}
 
 \title{Projet Transboost}
-\author{Luc Blassel, Romain Gautron, Xue Bai, Yifei Fan, Xuefan Xu}
-
+\author{Luc Blassel, Romain Gautron}
+\date{13 Mars 2018}
+\linespread{1.2}
 \begin{document}
 \maketitle
 
 \tableofcontents
 \newpage
 
-\section{Context}
-% \paragraph{}L’apprentissage supervisé  classique nécessite un grand nombre de données étiquetées, et dans certains cas une période de temps très importante pour pouvoir établir des modèles fiables. Ceci n’est pas toujours possible dans le monde réel, parfois il n’est simplement pas possible de collecter assez de données pour entraîner nos modèles ou alors le temps necessaire pour l’entrainement du modèle est beaucoup trop long pour que ce soit utilisable en pratique avec des ressources conventionnelles. L’apprentissage par transfert peut nous aider à résoudre ce type de problèmes.
+% \section{Contexte}
+\section{context}
+% \paragraph{}L’apprentissage supervisé  classique nécessite un grand nombre de données étiquetées, et dans certains cas une période de temps très importante pour pouvoir établir des modèles fiables. Ceci n’est pas toujours possible dans le monde réel, parfois il n’est simplement pas possible de collecter assez de données pour entraîner nos modèles ou alors le temps nécessaire pour l'entraînement du modèle est beaucoup trop long pour que ce soit utilisable en pratique avec des ressources conventionnelles. L’apprentissage par transfert peut nous aider à résoudre ce type de problèmes.
 \paragraph{}Classical supervised learning requires a large amount of labeled data and, in certain cases, a very long amount of time to ba able to train reliable models. This is not always possible in a `real world' setting, it could be that it is not possible to obtain sufficient data to train models or that the required time for training is so long that it becomes practically unfeasible with conventional resources. Transfer learning can help us solve this type of problem. 
 
 % \paragraph{}L’apprentissage par transfert nous permet de transférer des connaissances apprises depuis domaine source avec idéalement une grande quantité de données étiquetées de bonne qualité, vers un domaine cible. Cette approche permet de réutiliser des portions d’un modèle préalablement entrainé dans notre nouveau modèle. L'avantage est double : économie en temps de calcul et utilisation d'une quantité limitée de données en réinvestissant de l'information provenant d'une autre tâche. Cette méthode est considérée comme le prochain moteur de succès de l’apprentissage automatique après l’apprentissage supervisé.
@@ -48,25 +84,24 @@
 \paragraph{}The TransBoost method \cite{transboost}, proposed by Antoine Cornuéjols et al., outlines a different approach than "classical" transfer learning. Where the latter adapts the hypothesis learned on the source space, to the target space, TransBoost does the opposite. The hypothesis is learned on the source space and the data points from the target space are projected in the source space to make use of the source hypothesis without the need to relearn it.
 
 % \paragraph{}Ainsi, on n'apprend pas de nouvelles frontière entre les points, on injecte plutôt les points des bons côtés des frontières source. La projection des points du domaine cible sur le domaine source se fait dans le cadre d'un algorithme de boosting, qui grâce à plusieurs projecteurs faibles, permet d’obtenir un projecteur fort. Ce dernier permet alors d’utiliser l'hypothèse source pour classifier les points du domaine cible. La différence d'approche entre apprentissage par transfert "usuel" et Transboost est illustrée sur le schéma ~\ref{figDiff}.
-\paragraph{} This way no new frontiers between points are learned, the target points are correctly projected at the right location in the source domain. This projection is done within a boosting algorithm, allowing for the building of a strong projector by combining several weak projectors. This difference in approaching the issue can be seen in Figure \ref{figDiff}. 
+\paragraph{} This way no new frontiers between points are learned, the target points are correctly projected at the right location in the source domain. This projection is done within a boosting algorithm, allowing for the building of a strong projector by combining several weak projectors. This difference in approaching the issue can be seen in Figure~\ref{figDiff}. 
 
 
 % \paragraph{}L'approche Transboost a d’abord été testée sur la classification des séries temporelles incomplètes et à été un franc succès en ayant de bien meilleures performances que d’autres approches du même problème. Cependant, la classification d’images étant le mètre étalon en ce moment, le but de ce projet est d’adapter la méthode TransBoost à la classification d’images en utilisant des réseaux de convolution profonds (deep CNN). Ce travail ne présente que la classification binaire d'images.
-\paragraph{}The TransBoost method has been tested on classification of incomplete time series data with real success, outperforming other methods used for this problem. However, image classification being the standard measure right now, this project intends to adapt the TransBoost method toimage classification unsing deep convolutionnal neural networks (CNN). In this project only binary classification is tried.  
+\paragraph{}The TransBoost method has been tested on classification of incomplete time series data with real success, outperforming other methods used for this problem. However, image classification being the standard measure right now, this project intends to adapt the TransBoost method toimage classification unsing deep convolutionnal neural networks (CNN). In this project only binary classification is tried.
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{fig2.pdf}
-  % \caption{Différences entre l'approche classique et l'approche TransBoost}
-  \caption{Differences between "classical" transfer learning and the TransBoost method}
+%   \caption{Différences entre l'approche classique et l'approche TransBoost}
+\caption{Differences between "classical" transfer learning and the TransBoost method}
   \label{figDiff}
 \end{figure}
 
-\section{Transboost pour la classification d'images : principe}
+% \section{Transboost pour la classification d'images : principe}
+\section{Transboost for image classification: working principles}
 
-\paragraph{}L’application de la méthode TransBoost à la classification d’images oblige à se poser plusieurs questions. D’une part la très grande dimensionnalité des images force a utiliser des méthodes très lourdes telles que les réseaux de convolution profonds, c'est donc un défi en terme de puissance de calcul. D’autre part comment réaliser la projection des points du domaine cible dans le cas d'images ?
-
-% D'autre part, il existe dans les librairies de machine learning telles que \texttt{Tensor Flow} des réseaux pré-entraînés, mais quel modèle choisir, pourquoi?
-% \paragraph{}Contrairement a l’apprentissage par transfert “classique”  il ne s’agit pas ici d’adapter l'hypothèse source au domaine cible, comme ce que l’on peut voir sur la première partie du schéma. Il faut donc projeter les points du domaine cible sur le domaine source avec une bonne précision pour que la séparatrice du classificateur source puisse différencier les images du domaine cible.\\
+% \paragraph{}L’application de la méthode TransBoost à la classification d’images oblige à se poser plusieurs questions. D’une part la très grande dimensionnalité des images force a utiliser des méthodes très lourdes telles que les réseaux de convolution profonds, c'est donc un défi en terme de puissance de calcul. D’autre part comment réaliser la projection des points du domaine cible dans le cas d'images ?
+\paragraph{} Implementation of the TransBoost method for image classification requires consideration of several issues. First, the high dimensionality of image data induces the use of very heavy methods sur as CNNs. Second, how to project points of source to target domains in the case of images? 
 
 % \paragraph{} Le choix a été fait de modifier les premières couches du réseau "source" pour classifier les images du domaine cible. Ainsi, les premières couches du réseau existant se chargeront de trouver les bons descripteurs de faible niveau pour que la nouvelle tâche puisse être réalisée. Cependant il faudra trouver les meilleurs hyper-paramètres de ces projecteurs (voir infra).
 \paragraph{} The choice has been made, to modify the lower layers of the source network to classify target images. Therefore, the lower layers of the existing network will find the right low-level descriptors so that the new task can be done. However hyper-parameter optimization will have to be done.
@@ -77,166 +112,386 @@
 \pagebreak
 
 \begin{samepage}
-La construction d'un projecteur s'effectue comme suit : \medskip
+% La construction d'un projecteur s'effectue comme suit : 
+The construction of a projector is as follows:
+\medskip
   \begin{itemize}
-    \item On obtient un réseau convolutionnel très performant sur une classification binaire source et aussi bon que le hasard pour une classification binaire cible. Les modèles pré-entraînés disponibles ont souvent un grand nombre de classes de sortie. Il est nécessaire de changer la couche de sortie du réseau et de l’entraîner pour l’ajuster à notre domaine source binaire.
+    % \item On obtient un réseau convolutionnel très performant sur une classification binaire source et aussi bon que le hasard pour une classification binaire cible. Les modèles pré-entraînés disponibles ont souvent un grand nombre de classes de sortie. Il est nécessaire de changer la couche de sortie du réseau et de l’entraîner pour l’ajuster à notre domaine source binaire.
+    \item A pre-trained CNN is obtained. It is very performant for one source domain binary classification task and random for the target domain task. Since pre-trained models are available with a large number of outputs (general image classifiers can recognise hundreds of classes), it is necessary to modify the last layer and retrain it to have a binary output.
     \nopagebreak
-    \item On gèle la partie supérieur dudit réseau en laissant les premières couches entraînables.
+    % \item On gèle la partie supérieur dudit réseau en laissant les premières couches entraînables.
+    \item The higher layers of the modified CNN are frozen, leaving only the lower layers trainable 
     \nopagebreak
-    \item On ré-entraîne ledit modèle partiellement gelé pour obtenir un projecteur en visant une valeur de métrique seuil pour arrêt. Nous choisissons la précision comme métrique, celle-ci étant parlante et pertinente dans le cas de datasets équilibrés en classes.
+    % \item On ré-entraîne ledit modèle partiellement gelé pour obtenir un projecteur en visant une valeur de métrique seuil pour arrêt. Nous choisissons la précision comme métrique, celle-ci étant parlante et pertinente dans le cas de datasets équilibrés en classes.
+    \item This partially frozen CNN is retrained to obtain a weak projector, using the accuracy metric as a stopping criterion. accuracy has been chosen because it is meaningful and pertinent for well-balanced data-sets.
   \end{itemize}
 \end{samepage}
 
-On construit itérativement un ensemble de projecteurs faibles spécialisés sur les erreurs des précédents selon l'algorithme Adaboost \cite{boosting}. Notre hypothèse finale sur le domaine cible sera une combinaison de ces projecteurs faibles.
+% On construit itérativement un ensemble de projecteurs faibles spécialisés sur les erreurs des précédents selon l'algorithme Adaboost \cite{boosting}. Notre hypothèse finale sur le domaine cible sera une combinaison linéaire de ces projecteurs faibles.
+A set of weak projectors, specialised on the error of the previous projector, is therefore iteratively built using the AdaBoost algorithm \cite{boosting}. Our final hypothesis on the target domain in a linear combination of these weak projectors.
 
 \section{Application}
 
-Dans toute cette section, la figure~\ref{figRes} illustrera les propos.
+% Dans toute cette section, la figure~\ref{figRes} illustrera les propos.
+In this section, Figure~\ref{figRes} wil be used as reference.
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{fig1.pdf}
-  \caption{Déroulement de la méthode TransBoost dans le cadre de ce projet}
+%   \caption{Déroulement de la méthode TransBoost dans le cadre de ce projet}
+    \caption{Execution steps of the TransBoost method, within this project}
   \label{figRes}
 \end{figure}
 
-\subsection{Présentation des données}
-\paragraph{}Nous avons choisis le data set CIFAR-10 composé d’images RGB 32x32. Celui-ci est composé de 60000 images se ventilant en 10 classes (avion,automobile,oiseau,chat,cerf,chien,grenouille,cheval,bateau,camion). Les motivations pour ce choix sont :\\ \medskip
+% \subsection{Présentation des données}
+\subsection{Our Data}
+
+% \paragraph{}Nous avons choisis le jeu de données CIFAR-10 composé d’images RGB 32x32. Celui-ci est composé de 60000 images se ventilant en 10 classes (avion,automobile,oiseau,chat,cerf,chien,grenouille,cheval,bateau,camion). Les motivations pour ce choix sont :\\ \medskip
+\paragraph{}We have chosen the CIFAR-10 image dataset. It comtains 60000 RGB images 32 by 32 pixles. Thes images are separated in 10 classes (airplane, car, bird, cat, deer, dog, frog, horse, ship and truck). The reasons for this choice are as follows:\\ \medskip
+
 \begin{itemize}
-  \item qu’il s’agit d’un dataset de référence usuel dans le milieu
-  \item que la faible de taille des images limite le volume des données à manipuler
-  \item le faible nombre de classes permet néanmoins de constituer des couples plus ou moins ardus (avion/chat vs chien/chat)
+%   \item qu’il s’agit d’un jeu de données de référence usuel dans le milieu
+  \item It is a reference dataset in image classification.
+%   \item que la faible de taille des images limite le volume des données à manipuler
+  \item The small size of the images limits the size of data to manipulate
+%   \item le faible nombre de classes permet néanmoins de constituer des couples plus ou moins ardus (avion/chat vs chien/chat)
+  \item in spite of th esmall number of classes it is possible to make pairs of varying differentiability (plane/cat vs deer/horse)
 \end{itemize}
 
-\paragraph{}Les données sont déjà reparties en 3 ensembles : entraînement, validation et test. Pour pallier au faible nombre des données dans la base d’entraînement on introduira du bruit dans celles-ci pour éviter tout sur-apprentissage. Ce bruit consiste en des rotations, zooms, déformations aléatoires. Attention, aucun bruitage n’est appliqué aux ensemble de validation et de test. En effet, on veut ceux-ci les plus représentatifs possible des images “réelles” pour éprouver le modèle.
+% \paragraph{}Les données sont déjà reparties en 3 ensembles : entraînement, validation et test. Pour pallier au faible nombre des données dans la base d’entraînement on introduira du bruit dans celles-ci pour éviter tout sur-apprentissage. Ce bruit consiste en des rotations, zooms, déformations aléatoires. Attention, aucun bruitage n’est appliqué aux ensemble de validation et de test. En effet, on veut ceux-ci les plus représentatifs possible des images “réelles” pour éprouver le modèle.
+\paragraph{}Data is separated into 3 sets: training, validation and test. To counteract the low number of images in the training set, images are noised to avoid over-fitting. This noise consists of rotation, zooming and random deformations. No noisingis done for the test and validation sets. We want images in these sets to be as reprensatative as possible of "real world" images to test the model.
 
-\paragraph{}Pour constituer les ensembles source et cible, il s’agit dans les faits de simple paramètres d’entrées qui permettent de changer les classes de manière aisée (exemple : classes\_source = ['dog','truck'], classes\_target = ['deer','horse']). A noter que le bruitage des sets d’entraînement est appliqué pour les deux domaines.
+% \paragraph{}Pour constituer les ensembles source et cible, il s’agit dans les faits de simple paramètres d’entrées qui permettent de changer les classes de manière aisée (exemple : classes\_source = ['dog','truck'], classes\_target = ['deer','horse']). A noter que le bruitage des sets d’entraînement est appliqué pour les deux domaines.
+\paragraph{}The target and source domains are just two different binary image sets \textit{(eg. source = ['dog', 'truck'] and target = ['deer', 'horse'])}. This can be easily controlled by input parameters. It is important to note that noising of training data is applied to both domains.
 
+% \subsection{Construction d'un classificateur binaire fort sur le domaine source}
+\subsection{Elaboration of strong binary classifier on the source domain}
 
+% \paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classificateur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). \texttt{Keras} offre de nombreuses possibilités de modèles (voir \href{https://keras.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
+\paragraph{}To be able to apply TransBoost, it is necessary to have a strong binary classifier for one task that is very weak for another task. To obtain sych a model a base model is chosen, ie. a pre-trained model without the last layers (Dense layer and softmax layer). The \texttt{Keras} package offers a large choice of pre-trained CNNs (see \href{https://keras.io/applications/}{this page}). The choice has been made to use the Xception model. On the one hand it produces good transfer values and on the other hand the time necesary to generate these transfer values is low. Transfer values are the values of the activation function for all the neurons of the last layer of the considered network for a given set of images. 
 
-\subsection{Construction d'un classifieur binaire fort sur le domaine source}
-\paragraph{}Afin de pouvoir mettre en application l’idée du TransBoost, nous devons tout d’abord obtenir un classifieur binaire fort sur une tâche et aussi bon que le hasard sur une seconde. Pour cela, nous devons d’abord choisir quel sera notre modèle de base. On entend par modèle de base un réseau profond déjà entraîné et sans les dernières couches (couches connectées et softmax). \texttt{Keras} offre de nombreuses possibilités de modèles (voir \href{https://keras.io/applications/}{ce lien}). Le choix s’est porté sur le modèle Xception, d’une part pour la qualité des valeurs de transferts qu’il produit et d’autre part pour le temps qu’il faut pour générer ces valeurs de transfert. On appelle valeurs de transfert les valeurs des fonctions d’activation de la dernière couche du modèle de base pour un ensemble d’images.
+% \paragraph{}Par soucis de parcimonie en temps de calcul, on fait passer l’ensemble des sets d’images dans le modèle de base une seule fois. On génère ainsi les valeurs de transfert qui serviront à l’entraînement de la dernière couche. \\
+\paragraph{}To keep computing times low, the transfer values, for all the images of our datasets, are computed only once and used to train the last layer.\\ 
 
-\paragraph{}Par soucis de parcimonie en temps de calcul, on fait passer l’ensemble des sets d’images dans le modèle de base une seule fois. On génère ainsi les valeurs de transfert qui serviront à l’entraînement de la dernière couche. \\
-L’architecture de la dernière couche (plus exactement du dernier bloc) est :\\ \medskip
+% L’architecture de la dernière couche (plus exactement du dernier bloc) est :\\ 
+The architecture of the last layers are:
+\medskip
+
 \begin{samepage}
   \begin{itemize}
-    \item une couche entièrement connectée de taille 1024, activation “relu”
+    % \item une couche entièrement connectée de taille 1024, activation “relu”
+    \item Densely connected layer, of size 1024, "relu" activation function
     \nopagebreak
-    \item un dropout à 50 \%
+    % \item un dropout à 50 \%
+    \item 50\% dropout 
     \nopagebreak
-    \item une couche entièrement connectée de taille 512, activation “relu”
+    % \item une couche entièrement connectée de taille 512, activation “relu”
+    \item Densely connected layer, of size 512, "relu" activation function
     \nopagebreak
-    \item un dropout à 50 \%
+    % \item un dropout à 50 \%
+    \item 50\% dropout 
     \nopagebreak
-    \item un couche de taille 1, activation “sigmoïd”
+    % \item un couche de taille 1, activation “sigmoïd”
+    \item Densely connected layer, of size 1, "sigmoïd" activation function
   \end{itemize}
 \end{samepage}
 
 \medskip
 
-\paragraph{}Le choix de l'architecture s’est fait de manière empirique.\\
+% \paragraph{}Le choix de cette architecture s’est fait de manière empirique.\\
+\paragraph{}This topology was chosen empirically.\\
 
-Comme pour le bruitage des images, le dropout est ici pour prévenir le surapprentissage compte tenu du faible nombre d’images présentées.
-Une fois la dernière couche entraînée et répondant aux caractéristiques désirées, on assemble le modèle de base et ladite dernière couche en un modèle complet.
+% Comme pour le bruitage des images, le dropout est ici pour prévenir le sur-apprentissage compte tenu du faible nombre d’images présentées.
+% Une fois la dernière couche entraînée et répondant aux caractéristiques désirées, on assemble le modèle de base et ladite dernière couche en un modèle complet.
+Just like the noising of input data, the dropout layers are there to prevent overfitting that could occur due to the low number of training inputs. 
+After the last layer is trained to our desired output, the base model is reassembled from the frozen layer and the last layers to create a complete network.
 
 
-\subsection{Mise en pratique du TransBoost}
-\paragraph{}Une fois que nous avons constitué notre classifieur fort, il faut voir la suite comme l’application classique d’Adaboost. La seule nuance est que, au lieu de repartir d’un classifieur “from scratch” on va cette fois partir d’un classifieur partiellement entraîné pour constituer notre projecteur faible.
+% \subsection{Mise en pratique du TransBoost}
+\subsection{Application of TransBoost}
 
-\paragraph{}On cherche, non pas comme dans le transfert learning classique avec les CNN à réapprendre une nouvelle séparatrice linéaire en entraînant la dernière couche pour une nouvelle tâche. On cherche à faire rentrer pour la nouvelle tâche les points des bons cotés de la séparatrice pour la tâche précédente en cherchant des descripteurs de faibles niveau correspondants (i.e. en ré-entraînant les premiers blocs du réseaux de neurones profond) pour que cela soit réalisé.
+% \paragraph{}Une fois que nous avons constitué notre classificateur fort, il faut voir la suite comme l’application classique d’Adaboost. La seule nuance est que, au lieu de repartir d’un classificateur “from scratch” on va cette fois partir d’un classificateur partiellement entraîné pour constituer notre projecteur faible.
+\paragraph{} Once our strong classifier is trained, the next step is just the application of the AdaBoost algorithm. The slight nuance is that instead of building a new classifier "from scratch" we have a partially trained classifier as our weak projector. 
 
-\paragraph{}Pour ce faire,  on prend le modèle que nous avions à l’étape précédente, on dégèle les premières couches du modèle de base et on gèle tout le reste. A ce stade deux approches sont possibles : soit réinitialiser les poids des couches dégelées soit conserver les poids. Il se peut qu’en réinitialisant le poids de ces couches avec des descripteurs de faible niveau ne permette pas à l’algorithme de converger sur si peu de données. La réponse viendra des expérimentations. Dans les deux cas, le modèle résultant de l’étape citée servira de classifieur à entraîner lors des étapes de boosting.\\
+% \paragraph{}On cherche, non pas comme dans l'apprentissage par transfert classique avec les CNN à réapprendre une nouvelle séparatrice linéaire en entraînant la dernière couche pour une nouvelle tâche. On cherche à faire rentrer pour la nouvelle tâche les points des bons cotés de la séparatrice pour la tâche précédente en cherchant des descripteurs de faibles niveau correspondants (i.e. en ré-entraînant les premiers blocs du réseaux de neurones profond) pour que cela soit réalisé.
+\paragraph{}The do not want to relearn a separator function by retraining the last layer(s), as would be done in classical transfer learning with CNNs. Instead we seek to project the input points on the correct "side" of the separator function by retraining the first layers of the deep neural network.
 
-Trois paramètres importants sont à chercher selon un compromis performances/coût calculatoire :\\ \medskip
+% \paragraph{}Pour ce faire,  on prend le modèle que nous avions à l’étape précédente, on dégèle les premières couches du modèle de base et on gèle tout le reste. A ce stade deux approches sont possibles : soit réinitialiser les poids des couches dégelées soit conserver les poids. Il se peut qu’en réinitialisant le poids de ces couches avec des descripteurs de faible niveau ne permette pas à l’algorithme de converger sur si peu de données. La réponse viendra des expérimentations. Dans les deux cas, le modèle résultant de l’étape citée servira de classificateur à entraîner lors des étapes de boosting.\\
+\paragraph{} To do so we unfreeze the first layers and freeze the weight of all the other layers, so they become untrainable. At this point two separate approaches are possible: either reinitialize the weights of the unfrozen layers or keep these weights. It is possible that by reinitializing the weights will stop the model from converging with so little training data. The choice will be made on experimental results. In both cases, the resulting model will be used as the weak projector / classifier in the boosting steps. \\
+
+% Trois paramètres importants sont à chercher selon un compromis performances/coût calculatoire :\\ 
+There are three important parameters to optimize while trying to keep a good baance between performance and computing cost:\\
+\medskip
+
 \begin{itemize}
-  \item la force des classifieurs (seuil de précision) à chaque étape de boosting
-  \item le nombre de blocs convolutifs à entraîner
-  \item le nombre de projecteurs faibles entraînés
+%   \item la force des classificateurs (seuil de précision) à chaque étape de boosting
+  \item The power of the weak classifiers (accuracy threshold)
+%   \item le nombre de blocs convolutifs à entraîner
+  \item The number of convolution blocs to train
+%   \item le nombre de projecteurs faibles entraînés
+  \item The number of weak models to train
 \end{itemize}
 
-\paragraph{}La suite est celle de l’algorithme Adaboost (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
+% \paragraph{}La suite est celle de l’algorithme Adaboost (voir ~\ref{ada}). A noter que l’erreur totale du modèle est mesurée sur le set de validation. Par contre le modèle est bien entraîné sur le set d’entraînement pondéré, et la pondération des points basée sur les prédictions faites sur ce même set d’entraînement.\\
+\paragraph{}The next steps are just the AdaBoost algorithm \textit{(cf. Algorithm~\ref{ada})}. It is important to note that the model's total error is measured on the validation set. However the model is trained on the weighted training set. The weights of each training point is based on the prediciton error of the previous boosting model on this same training set.
 
-A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seuil de précision est atteint (avec une limite d’un grand nombre d’epochs).
+% A chaque étape, l’entraînement d’un projecteur s’arrête lorsqu’un seuil de précision est atteint (avec une limite d’un grand nombre d’epochs).
+At each step, training of a projector stops when the accuracy threshold is reached. A limit on training epochs is set in case of non convergence.\\
+% \pagebreak
 
-\pagebreak
+% \begin{algorithm}[H]
+%   \SetAlCapSkip{10ex}
+%   \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+%   \SetKw{Init}{Initialisation:}
+%   \Input{$\mathcal{X_S}\rightarrow\mathcal{Y_S}$ :  l’hypothèse source\\
+%           $\mathcal{S_T = \{(X_\mathrm{i}^T,Y_\mathrm{i}^T)\}}_{1\leq i\leq m}$ : l'ensemble d’entraînement cible}
+%   \Init{} de la distribution sur le jeu d’entraînement:$D_1(i)=1/m\ for\ i=1,\cdots,m$\;
+%   \For{$n=1,\cdots,N$}{
+%     Trouver une projection $\pi_i:\mathcal{X_T\rightarrow X_S}$ tq. $h_S(\pi_i(.))$ soit meilleure que le hasard sur $D_n(\mathcal{S_T})$\;
+%     Soit $\epsilon_n$ le taux d'erreur de $h_S(\pi_i(.))$ sur $D_n(\mathcal{S_T})$: $\epsilon_n = P_{i~D_n}[h_S(\pi_n(x_i))\neq y_i]$(avec $\epsilon_n<0.5$)\;{}
+%     Calculer $\alpha_i=\frac{1}{2}log_2(\frac{1-\epsilon_i}{\epsilon_i})$\;
+%     Mettre a jour: \For{$i=1,\cdots,m$}{
+%         \begin{equation*}
+%           \begin{split}
+%             D_{n+1}(i) & = \frac{D_n(i)}{Z_n}\times\begin{cases}
+%               e^{-\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))=y_i^{\mathcal{T}} \\
+%               e^{\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))\neq y_i^{\mathcal{T}}
+%             \end{cases}\\
+%             & = \frac{D_n(i)exp(-\alpha_n y_i^{(\mathcal{T})}h_{\mathcal{S}}(\pi_n(x^{(\mathcal{T})})))}{Z_n}
+%           \end{split}
+%         \end{equation*}
+%         Ou $Z_n$ est un facteur de normalisation tq. $D_{n+1}$ soit une distribution de $\mathcal{S_T}$\;
+%     }
+%   }
+%   \Output{L'hypothese finale $H_{\mathcal{T}}:\mathcal{X_T \rightarrow Y_T}$:\\
+%             $ H_{\mathcal{T}}(x_{\mathcal{T}})=signe\{\sum\limits_{n=1}^N \alpha_n h_{\mathcal{S}}(\pi_n(x^{\mathcal{T}}))\}$}
+
+%   \caption{Algorithme Transboost}
+%   \label{ada}
+% \end{algorithm}
 
 \begin{algorithm}[H]
-  \SetAlCapSkip{10ex}
-  \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
-  \SetKw{Init}{Initialisation:}
-  \Input{$\mathcal{X_S}\rightarrow\mathcal{Y_S}$ :  l'hypothese source\\
-          $\mathcal{S_T = \{(X_I^T,Y_I^T)\}}_{1\leq i\leq m}$ : l'ensemble d'entrainement cible}
-  \Init{} de la distribution sur le jeu d'entrainement:$D_1(i)=1/m\ for\ i=1,\cdots,m$\;
-  \For{$n=1,\cdots,N$}{
-    Trouver une projection $\pi_i:\mathcal{X_T\rightarrow X_S}$ tq. $h_S(\pi_i(.))$ soit meilleure que le hasard sur $D_n(\mathcal{S_T})$\;
-    Soit $\epsilon_n$ le taux d'erreur de $h_S(\pi_i(.))$ sur $D_n(\mathcal{S_T})$: $\epsilon_n = P_{i~D_n}[h_S(\pi_n(x_i))\neq y_i]$(avec $\epsilon_n<0.5$)\;{}
-    Calculer $\alpha_i=\frac{1}{2}log_2(\frac{1-\epsilon_i}{\epsilon_i})$\;
-    Mettre a jour: \For{$i=1,\cdots,m$}{
-        \begin{equation*}
-          \begin{split}
-            D_{n+1}(i) & = \frac{D_n(i)}{Z_n}\times\begin{cases}
-              e^{-\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))=y_i^{\mathcal{T}} \\
-              e^{\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))\neq y_i^{\mathcal{T}}
-            \end{cases}\\
-            & = \frac{D_n(i)exp(-\alpha_n y_i^{(\mathcal{T})}h_{\mathcal{S}}(\pi_n(x^{(\mathcal{T})})))}{Z_n}
-          \end{split}
-        \end{equation*}
-        Ou $Z_n$ est un facteur de normalisation tq. $D_{n+1}$ soit une distribution de $\mathcal{S_T}$\;
+    \SetAlCapSkip{10ex}
+    \SetKwInOut{Input}{input}\SetKwInOut{Output}{output}
+    \SetKw{Init}{Initialisation:}
+    \Input{\(\mathcal{X_S}\rightarrow\mathcal{Y_S}\): source hypothesis\\
+            \(\mathcal{S_T = \{(X_I^T,Y_I^T)\}}_{1\leq i\leq m}\): target training set}
+    \Init{} distribution of training set:\(D_1(i)=1/m\ for\ i=1,\ldots,m\) \;
+    \For{\(n=1,\ldots,N\)}{
+      Find a projection \(\pi_i:\mathcal{X_T\rightarrow X_S}\) tq. \(h_S(\pi_i(.))\) That is better than random on \(D_n(\mathcal{S_T})\) \;
+      Let \(\epsilon_n\) be the error rate \(h_S(\pi_i(.))\) on \(D_n(\mathcal{S_T})\): \(\epsilon_n = P_{i~D_n}[h_S(\pi_n(x_i))\neq y_i]\)(with \(\epsilon_n<0.5\))\;{}
+      Compute \(\alpha_i=\frac{1}{2}\log_2(\frac{1-\epsilon_i}{\epsilon_i})\) \;
+      Update: \For{\(i=1,\ldots,m\)}{
+          \begin{equation*}
+            \begin{split}
+              D_{n+1}(i) & = \frac{D_n(i)}{Z_n}\times\begin{cases}
+                e^{-\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))=y_i^{\mathcal{T}} \\
+                e^{\alpha_n}\ si\ h_{\mathcal{S}}(\pi_n(x_i^{\mathcal{T}}))\neq y_i^{\mathcal{T}}
+              \end{cases}\\
+              & = \frac{D_n(i)\exp(-\alpha_n y_i^{(\mathcal{T})}h_{\mathcal{S}}(\pi_n(x^{(\mathcal{T})})))}{Z_n}
+            \end{split}
+          \end{equation*}
+          Where \(Z_n\) is a normalization factor such as \(D_{n+1}\) is a distribution of \(\mathcal{S_T}\) \;
+      }
     }
-  }
-  \Output{L'hypothese finale $H_{\mathcal{T}}:\mathcal{X_T \rightarrow Y_T}$:\\
-            $ H_{\mathcal{T}}(x_{\mathcal{T}})=signe\{\sum\limits_{n=1}^N \alpha_n h_{\mathcal{S}}(\pi_n(x^{\mathcal{T}}))\}$}
-
-  \caption{Algorithme Transboost}
-  \label{ada}
-\end{algorithm}
+    \Output{The final hypothesis: \(H_{\mathcal{T}}:\mathcal{X_T \rightarrow Y_T}\):\\
+              \( H_{\mathcal{T}}(x_{\mathcal{T}})=sign\{\sum\limits_{n=1}^N \alpha_n h_{\mathcal{S}}(\pi_n(x^{\mathcal{T}}))\} \)}
+    \smallskip
+    \caption{TransBoost Algorithm}
+    \label{ada}
+  \end{algorithm}
 
 \subsection{Difficultés rencontrées}
-\paragraph{}Nous avons fait la décision initiale de travailler dans un environnement purement \texttt{Tensor Flow}, puisque le modèle que nous avions choisi était disponible dans cette librairie. Cependant dès qu’il a été temps de modifier la structure du modèle (pour avoir une couche de sortie binaire par exemple) ou qu’il a fallu geler l'entraînement de certaines couches l’utilisation de \texttt{Tensor Flow} est devenue très compliquée. En effet l’objet du modèle était introuvable et il fallait modifier un graphe ce qui nous a posé beaucoup de problèmes. C’est pour cela que nous avons décidé d’utiliser la librairie \texttt{Keras} qui fonctionne comme surcouche de \texttt{Tensor Flow} ce qui nous a permis d’utiliser les modèles disponible dans \texttt{Tensor Flow} mais en ayant des outils et une syntaxe plus claire et plus simple d’utilisation, permettant des temps de développement beaucoup plus courts.
+% \paragraph{}Nous avons pris la décision initiale de travailler dans un environnement purement \texttt{Tensor Flow}, puisque le modèle que nous avions choisi était disponible dans cette librairie. Cependant dès qu’il a été temps de modifier la structure du modèle (pour avoir une couche de sortie binaire par exemple) ou qu’il a fallu geler l'entraînement de certaines couches l’utilisation de \texttt{Tensor Flow} est devenue très compliquée. En effet l’objet du modèle était introuvable et il fallait modifier un graphe ce qui nous a posé beaucoup de problèmes. C’est pour cela que nous avons décidé d’utiliser la librairie \texttt{Keras} qui fonctionne comme surcouche de \texttt{Tensor Flow} ce qui nous a permis d’utiliser les modèles disponible dans \texttt{Tensor Flow} mais en ayant des outils et une syntaxe plus claire et plus simple d’utilisation, permettant des temps de développement beaucoup plus courts.
+\paragraph{} We initially made the decisio of working in a pure \texttt{Tensor Flow} environnment, since the model we had chosen was available in this package. However when we had to modify the structure of the network (to have a binary output for example), or when certain layers had to be frozen using \texttt{Tensor Flow} became quite complicated. The actual model object was not found so we had to directly modify the graph which caused us some problems. For this reason we decided to use the \texttt{Keras} package that has a \texttt{Tensor Flow} backend, allowing us to use pre-trained models from the \texttt{Tensor Flow} library, but with a much clearer syntax and easier to use tools, allowing us to bring down the development times. 
 
-\paragraph{}Nous avons aussi rencontré beaucoup de problèmes de ressources machine, puisque les machines physiques et virtuelles auxquelles nous avions accès présentaient des performances limitées. Ceci a engendré des temps d'exécution se comptant en dizaine d’heures et même en jours dans certains cas et aboutissant souvent a des erreurs de mémoire. Il est donc nécessaire d’avoir accès à une machine performante qui nous permettra débugger le programme et le perfectionner sans attendre des périodes très longues.
+% \paragraph{}Nous avons aussi rencontré beaucoup de problèmes de ressources machine, puisque les machines physiques et virtuelles auxquelles nous avions accès présentaient des performances limitées. Ceci a engendré des temps d'exécution se comptant en dizaine d’heures et même en jours dans certains cas et aboutissant souvent a des erreurs de mémoire. Il est donc nécessaire d’avoir accès à une machine performante qui nous permettra débugger le programme et le perfectionner sans attendre des périodes très longues.
+\paragraph{} We also encountered computing power issues, since the virtual machines we had access to were limited in resources. This meant dozens of hours of computing time for each run, some times days and ending some times in memory errors. It is therefore necessary to have a powerful machine that could allow us to debug and develop the program without long delays. 
 
-\section{Comparaisons critiques portant sur la méthode transboost}
-\subsection{Projecteurs faibles vs. projecteurs forts}
-\paragraph{}On veut comparer l’approche TransBoost avec faisant varier la force des projecteurs aux extrêmes. Si l’on obtient des performance supérieures avec un seul projecteur fort (i.e. les premiers groupes de couches convolutives entraînées aux maximum) alors on ne peut pas montrer un intérêt de travailler avec une multitudes de projecteurs faibles en boosting dans ce cadre précis.
+% \paragraph{}Au fur et a mesure de l'avancement du projet et avec la mise en disponibilité d'une machine plus puissante nous avons rencontré d'autres problèmes, en effet avec la modification constante du réseau, réinitialisation des poids et sauvegarde nous avons décidé d'enregistrer les objets modèles dans une liste a chaque fin d’itération de boosting et de supprimer l'objet modèle actif avec la fonction \texttt{del} de Python. Cependant cette fonction ne garantit pas la suppression immédiate de l'objet \`a cause du système de gestion de mémoire vive de Python et même en forçant l’exécution du "garbage collector" du langage C (qui est utilise pour gérer la mémoire en Python) nous observions des comportements étranges avec des modèles qui n’étaient pas entièrement supprim\'es et donc des poids qui ne changeaient pas entre chaque étape du boosting.
+\paragraph{}As the project advanced and new, more powerful machines were made available to us, we had other problems. Due to the frequent modification of te network, reinitializing of weights, and saving to disk, we decided to save all the model in a list as each boosting step finished, and to delete the active model with the native Python \texttt{del} function. However this function doesn't guaranty the immediate deletion of the object, due Python's memory managment system. Enven after forcing the execution of C's garbage collector (which is used for managing memory in Python), there were strange behaviors with partaially deleted models, and therfore some weights that did not change for each boosting step.
 
-\subsection{Projecteurs vs. nouveaux classifieurs}
-\paragraph{}Comme on le voit, la méthode du TransBoost appliquée avec le modèle complet (base et dernier bloc) est très gourmande en temps et en espace. En effet, après avoir entraîné un grand nombre de classifieurs il faut également stocker tous ceux-ci à fin de pouvoir réaliser les classification de nouveau points selon l’hypothèse finale. En fait, on peut être plus économe en espace. En effet, il suffit de la connaissance pour reconstruire tous les modèles issus du boosting :\\ \medskip
-\begin{itemize}
-  \item du modèle complet non modifié
-  \item uniquement pour chaque étape de boosting du poids des couches modifiées
-\end{itemize}
-\paragraph{}On souhaite mettre en compétitions deux approches : le TransBoost et une méthode de boosting classique.
+% \paragraph{}Nous avons au final décide d'enregistrer les modèles a chaque étape sur le disque dur de la machine avec des fonctions de \texttt{Keras} qui permettent d'une part de sauvegarder l'architecture du modèle dans un fichier \emph{.json} et les poids dans un autre. Etant donné que l'architecture du réseau ne change pas il est possible de ne l'enregistrer qu'une seule fois après l’entraînement du modèle sur l'espace source. Cette architecture indique également quelles couches sont entraînable lors de la phase de boosting, et par la suite a chaque fois que l'on souhaite enregistrer le modèle on peut se contenter d'enregistrer uniquement les poids. 
+\paragraph{}The decision was therefore made to save the models to the hard drive with \texttt{Keras} functions that allow us to save the architecture and the weights of the model separatly in \texttt{.json} files. Since the architecture of the model does not change we can save it only once at the beginning, after training it on the source dataset, and only save the weights at each boosting step. This architecture also indicates which layers are frozen and which are trainable durin g the boosting phase.
 
-\paragraph{}On peut atteindre un seuil de précision relativement bas à chaque étape ( de l’ordre de 0.7) simplement à l’aide d’un petit réseau convolutif initialisé (quelques blocs). Bien qu’avec l’économie en espace citée précédemment il n’y ait pas beaucoup de différence, l’économie en temps de calcul est bien là. En effet pour chaque prédiction à faire, le passage dans le petit CNN suffit. Tandis qu’à chaque étape avec le modèle de base augmenté du dernier bloc il faille calculer les activations dans toute la partie supérieure gelée du réseau avant de "backpropager" l’erreur.
+% \paragraph{}Une fois que le modèle est sauv\'e sur le disque dur on peut appeler une fonction de \texttt{Tensor Flow} qui permet d'effacer tous les objets de la session \texttt{Tensor Flow} et ainsi s'assurer que plus aucun objet modèle précédemment entraîne ne persiste et ne perturbe l’entraînement de nouveaux modèles. Pour pouvoir entraîner un nouveau modèle il suffit, a chaque début d’itération de boosting de créé un réseau a partir de l'architecture sauvée sur disque et d'y charger les poids du modèle de base.
+\paragraph{}Once the model is saved to disk, we can call a \texttt{Tensor Flow} function that deletes all the objects of the \texttt{Tensor Flow} session and therefore ensuring that no objects from the previous session persist and disrupts the trainng of subsequent models. To be able to train a new model we can just load the architecture at the beginning of the boosting iteration and populate it with the weights of the base model. 
 
+% \paragraph{} Une fois que tous les projecteurs ont été entraînés on peut effectuer les prédictions en chargeant séquentiellement chaque modèle (en chargeant l'architecture et les poids) et d'enregistrer ses prédictions avant de supprimer le modèle et de charger le suivant. A la fin la liste de prédiction est pondérée avec les $\alpha$ calcul\'es lors du boosting et on obtient la prédiction finale issue du boosting
+\paragraph{} Once all the projectors are trained we can do prediction by sequentially loading all the stored models (architecture + weights) and to store the predictions before deleting the model and loading the next one. After the last step, all the prediction are weighted with the \(\alpha_i\) (that are calculated during the boosting phase) to get the total boosting prediction.
 
+% \paragraph{} \emph{A priori} cette méthode de tout enregistrer sur le disque avant de tout supprimer et tout recharger peut paraître lourde et pas forcement nécessaire, cependant ces étapes supplémentaires et le temps d’accès beaucoup plus long du disque dur par rapport a la mémoire vive sont de petits prix a payer par rapport a la garantie que l'on entraîne bien ce que l'on veut entraîner et qu'il ne peut pas y avoir de "contamination" entre les étapes du boosting. 
+\paragraph{} \emph{A priori} this method of storing the model sto disk before deleting them and reload everything can seem clunky and unnecessarily heavy, however these additional steps are of little cost in front of the guaranty of no "cross contamination" between boosting steps and that we are training the right model. Furthermore the longer acces times to hard disk storage compared to system memory is negligible before the training times. 
 
-\section{Resultats}
-\subsection{Construction du classifieur binaire}
-\paragraph{}Dans les faits, pour la base d’apprentissage “chien/camion”, l’algorithme arrive à 98.9\% de précision sur le set de test en seulement 2 epochs. D’un autre côté ce même modèle entraîné sur le dataset précédent a un précision de 50\% en prédiction sur le dataset “deer/horse”, ce qui répond bien à ce que l’on recherchait.
+% \section{Comparaisons critiques portant sur la méthode transboost}
+\section{Critical comparison for the TransBoost method}
 
-\subsection{Boosting classique sur petit CNN}
-\paragraph{}Avec un petit nombre de projecteurs (12) et un petit CNN (3 blocs de convolution) on arrive à une précision de 76.8\% en test sur le dataset “horse/deer”. Expérience à renouveler avec un 100 projecteurs dès qu’on aura la puissance de calcul ad hoc.
+% \subsection{Projecteurs faibles vs. projecteurs forts}
+\subsection{Weak vs. strong projectors}
 
-\section{Experimentations a venir}
-\subsection{Comportement de l'algorithme Transboost}
-\subsubsection{Influence des domaines source et cible}
-\paragraph{}Peut t-on partir d’un domaine source simple (ex : “dog/truck”) pour aller vers un domaine cible plus compliqué (ex:”deer/horse”) ?
+% \paragraph{}On veut comparer l’approche TransBoost avec faisant varier la force des projecteurs aux extrêmes. Si l’on obtient des performance supérieures avec un seul projecteur fort (i.e. les premiers groupes de couches convolutives entraînées aux maximum) alors on ne peut pas montrer un intérêt de travailler avec une multitudes de projecteurs faibles en boosting dans ce cadre précis.
+\paragraph{}We want to compare the Transboost approach of boosting weak projectors to the training of one very good projector. If the performance is higher, with shorter training times, in the TransBoost approahch, then we can prove a real advantage of this method.
 
-\paragraph{}Bien sur dans les temps venant il faudra tester les critiques soulevées plus haut, en comparant les performances des projecteurs faibles contre un projecteur fort, et la performance de ces projecteurs par rapport à celle d'un classifieur nouvellement entraîné.
+% \subsection{Projecteurs vs. nouveaux classificateurs}
+\subsection{Projectors vs. new classifiers}
 
+% \paragraph{}Comme on le voit, la méthode du TransBoost appliquée avec le modèle complet (base et dernier bloc) est très gourmande en temps et en espace. En effet, après avoir entraîné un grand nombre de classificateurs il faut également stocker tous ceux-ci à fin de pouvoir réaliser les classification de nouveau points selon l’hypothèse finale. En fait, on peut être plus économe en espace. En effet, il suffit de la connaissance pour reconstruire tous les modèles issus du boosting :\\ \medskip
+\paragraph{}The transboost method requires quite a lot of memory and computing time. Indeed after having trained a big number of classifiers it is necessary to store them so as to be able to reuse them for class prediction of testing points. The space needed can be lowered by storing the architecture of the base model and only the weights of the modified layers at each boosting step, and reconstructing each boosting model when we need to predict a class.
 
-\subsubsection{Influence des hyper-paramètres: recherche d'un optimum précision/coût calculatoire}
-\paragraph{Influence de la force des projecteurs}
-\paragraph{Influence du nombre de projecteurs}
-\paragraph{Influence du nombre de blocs entraînés}
-Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vite le seuil de précision
+% \begin{itemize}
+%   \item du modèle complet non modifié
+%   \item uniquement pour chaque étape de boosting du poids des couches modifiées
+% \end{itemize}
+% \paragraph{}On souhaite mettre en compétitions deux approches : le TransBoost et une méthode de boosting classique.
+\paragraph{}We want to compare the TransBoost method with a classical boosting method. 
 
-\subsection{Comparaisons critiques de l'algorithme Transboost}
-\subsubsection{Projecteurs faibles vs. projecteurs forts}
-\subsubsection{Projecteurs vs. nouveaux classifieurs}
+% \paragraph{}On peut atteindre un seuil de précision relativement bas à chaque étape ( de l’ordre de 0.7) simplement à l’aide d’un petit réseau convolutif initialisé (quelques blocs). Bien qu’avec l’économie en espace citée précédemment il n’y ait pas beaucoup de différence, l’économie en temps de calcul est bien là. En effet pour chaque prédiction à faire, le passage dans le petit CNN suffit. Tandis qu’à chaque étape avec le modèle de base augmenté du dernier bloc il faille calculer les activations dans toute la partie supérieure gelée du réseau avant de "backpropager" l’erreur.
+\paragraph{}It is possible to reach a low accuracy score (0.7) at each step quite easily with a simple CNN (only a few convolution blocks). This allows for shorter computing times. This is tested lower.
+
+% \section{Conditions et méthodes d’expérimentation}
+\section{Experimental setup}
+
+% Toutes les expérimentations ont été faites sur une machine à 8 cœurs, 30 Go de mémoire RAM et 11 Go de GPU. Il s'agit d'un serveur Ubuntu avec Keras GPU. Nous avons utilisé le service Google Cloud. On interagit en lignes de commandes : on lance le programme dans un screen qui écrit un fichier \textit{.log}. On peut alors détacher le screen et quitter la machine virtuelle et revenir consulter le log en cours de construction quand l'on souhaite.
+All experimentations were done on an 8 core CU, with 30 Gb of RAM, and a GPU with 11 Gb of video memory, within the google cloud framework. This virtual machine had a Ubuntu server OS with a Python 3 distribution on which we install the GPU version of \texttt{Keras}. All programs were launched in a "screen" environnment so that disconnection from the virtual machine would not stop the execution. All outputs were logged to a text file.  
+
+% \paragraph{}Le programme est construit tel que suit : la configuration à faire tourner est spécifiée dans un fichier \textit{.json} à part (cf. \ref{config}). De par la nature des expérimentations qui étaient prévues, le programme permet également d'appeler une liste de configurations pour par exemple tester différents seuils de projecteurs.
+\paragraph{}The program is built as follows: the configuration to run the given execution is specified in a file in the \texttt{.json} format \textit{(cf.~\ref{config})}. Since we wanted to run several experimentations (to test different accuracy thresholds for example) the program can be given a list of configuration files and will execute itself with each of them sequentially. 
+
+\begin{lstlisting}[language=json,firstnumber=1,caption={configuration example},label={config}][H]
+{
+  "models_path" : "models",
+  "models_weights_path" : "models_weights",
+  "path_to_best_model" : "best_top_model.hdf5",
+  "threshold" : 0.65,
+  "proba_threshold" : 0.5,
+  "transformation_ratio" : 0.05,
+  "originalSize" : 32,
+  "resizeFactor" : 5,
+  "batch_size_source" : 10,
+  "batch_size_target" : 10,
+  "epochs_source" : 1000,
+  "epochs_target" : 1000,
+  "classes_source" : ["dog","truck"],
+  "classes_target" : ["deer","horse"],
+  "layerLimit" : 15,
+  "times" : 1,
+  "lr_source" : 0.0001,
+  "lr_target" : 0.0001,
+  "step" : 3,
+  "recompute_transfer_values" : false,
+  "train_top_model" : false,
+  "reinitialize_bottom_layers" : false,
+  "bigNet" : true,
+  "verbose" : true
+}
+\end{lstlisting}
+
+% \section{Resultats}
+\section{Results}
+
+% \subsection{Construction du classificateur binaire}
+\subsection{Building the binary classifier}
+
+% \paragraph{}Dans les faits, pour la base d’apprentissage “chien/camion”, l’algorithme arrive à 98.9\% de précision sur le set de test en seulement 2 epochs. D’un autre côté ce même modèle entraîné sur le dataset précédent a un précision de 50\% en prédiction sur le dataset “deer/horse”, ce qui répond bien à ce que l’on recherchait.
+\paragraph{} In practice, for the source binary classification task "dog/truck", the model reaches a 98.9\% accuracy after only 2 training epochs. This same model has a 50\% accuracy on the target binary task: "deer/horse". This corresponds well to what we wanted from the base model.
+
+% \subsection{Méthode transboost}
+\subsection{The TransBoost method}
+
+% \paragraph{} Après plusieurs essais (learning rate, optimiseur, réinitialisation des couches modifiées ou non ...) l'algorithme ne converge pas ou bien pas dans un temps raisonnable. Pour que l'algorithme marche dans le boosting, celui ci doit au moins converger au seuil à la première itération assurant ainsi une performance supérieure ou égale lors du boosting. 
+\paragraph{}After several trying several different parameter tunings (learning rate, optimizer, reinitializing modified layers or not, \ldots) the method does not converge in a reasonnable time. So that the algorithm can work, it must at least reach the accuracy threshold during the first iteration allowing for better performance after boosting. 
+
+% \paragraph{} Dans les conditions présentées (30 Go de RAM, 11 Go de GPU et 8 coeurs) l'algorithme ne converge pas à un seuil de 55\% sur le set de validation au bout de 4h et ne peut dépasser 65 \% sur le set d'entraînement. Ainsi, même si l'on vise un seuil de 70\% en resubstitution pour atteindre entre 55\% et 60\% sur le set de validation, on ne pourra pas atteindre ces valeurs dans le 4h. Par conséquent on n'obtient que des projecteurs équivalents au hasard.
+\paragraph{} In the present conditions (30 Gb of RAM, 8 cores and GPU with 11 Gb of memory) the algorithm doesn't even reach 55\% percent accuracy after 4h and cannot go further than 65\% accuracy on the training set. Therefore evene if we are aiming for 70\% with resubstituttion to reach a accuracy between 55 and 60\% on the validation set, we will not be able to reach this goal in reasonnable time. 
+
+% \paragraph{} Même si l'algorithme arrivait à converger, s'il faut 4h par projecteur avec de telles ressources, on voit que cela est prohibitif. On peut expliquer cela par le fait qu'on déstabilise sur très peu de données les couches basses qui ont appris des descripteurs de faible niveau (les plus longs à apprendre). Il faut mettre ceci en regard du très peu de temps et de ressources calculatoires que nécessite le transfert learning classique avec de très bonnes performances.
+\paragraph{} Even if the algorithm did manage to converge, if 4 hours are needed per projector with this cimputing power, it is easy to see how this could be prohibitive. This can be explainde by the fact that the lower layers, containing low level descriptors (that take the longest to learn), are destabilized with a low amout of examples to boot. It is important to see this in light of the lower amount of time and computing power necessary to reach good performances in a classical transfer learning setting.   
+
+% \subsection{Boosting classique sur petit CNN}
+\subsection{Classical boosting on small CNN}
 \paragraph{}
+
+\begin{figure}[H]
+\begin{center}
+\centerline{\includegraphics[width=\textwidth]{smallnet.png}}
+% \caption{Évolution de la précision de l'algorithme de Boosting avec des petits réseaux de convolution (sans transfert) }
+\caption{Evolution of the accuracy over time for a boosting algorithm with small CNNs as weak learners (no transfer)}
+\label{fig:smallNet}
+\end{center}
+\end{figure}
+
+\begin{samepage}
+% On a construit un simple réseau de neurones de convolution  qui apprend directement la domaine cible avec l'algorithme de Boosting, sans l'apprentissage de transfert. Son architecture est:\\ 
+A simple CNN was built. It learns on the target domain directly with a boosting algorithm. There is no transfer. It's architecture is as follows:\\
+\medskip \nopagebreak
+  \begin{itemize}
+    % \item deux couches de convolution avec 32 filtres de taille 3*3 chacun, activation “relu”, max-pooling de taille 2*2
+    \item two convolution layers woth 32 filters of 3*3 size each, "relu' activation function and max-pooling of size 2*2
+    \nopagebreak
+    % \item une couche de convolution avec 64 filtres de taille 3*3 chacun, activation “relu”, max-pooling de taille 2*2
+    \item One convolution layer woth 64 filters of size 3*3, "relu" activation function and max-pooling of size 2*2
+    \nopagebreak 
+    % \item une couche flatten 
+    \item one flatten layer
+    \nopagebreak
+    % \item une couche entièrement connectée de taille 64, activation “relu”
+    \item One densely connected layer of size 64, "relu" activation function
+    \nopagebreak
+    % \item un dropout à 50 \%
+    \item 50\% dropout
+    \nopagebreak
+    % \item une couche entièrement connectée de taille 34, activation “relu”
+    \item One densely connected layer of size 64, "relu" activation function
+    \nopagebreak
+    % \item un dropout à 50 \%
+    \item 50\% dropout
+    \nopagebreak
+    % \item un couche de sortie avec une activation sigmoïde
+    \item One output layer with "sigmoid" activation function
+  \end{itemize}
+\end{samepage}
+
+% \paragraph{} On utilise ce petit réseau de convolution \`a la place des projecteurs dans l'algorithme de boosting, et on mesure la précision de classification sur le set de test \`a différentes itérations du boosting. Les résultats de cette analyse sont visibles sur la figure \ref{fig:smallNet}. Les mesures ont été effectuées pour plusieurs seuils de précision d’entraînement lors du boosting.
+\paragraph{} This small CNN is used instead of the projectors in the boosting algorithm, and we measure the classification accuracy on the test set at sevral different boosting iterations. Results for this analysis are presented in Figure~\ref{fig:smallNet}. These measures were done at several different accuracy thresholds for boosting learners.  
+
+% \paragraph{}Le set à apprendre est relativement difficile : il s'agit de "deer/horse".Ceci montre que l'algorithme de boosting a été correctement implémenté (au moins 10 points de gain de précision par rapport au seuil des projecteurs faibles). On peut voir que plus le projecteur est fort, plus la précision augmente. Au bout d'une dizaine de projecteurs on a ensuite une évolution très lente de performances.
+\paragraph{}The learning set is relatively difficult: "deer/horse". The results show that the boosting algorithm was correctly implemented since we see at least 10 points of gain in accuracy compared to th eweak learner threshold. It is interesting to note that however, the stronger the boosting learner is the higher the resulting accuracy is. We can see as well that a relatively small number of boosting steps is necessary before reaching an accuracy plateau where futher learning is unnecessary. 
+
+% \section{Expérimentations non réalisées}
+\section{Follow-up experimentations}
+
+% Expérimentations impossibles du fait que l'algorithme ne converge pas (ou du moins en un temps raisonnable).
+These are experimentations we would have wished to do if we had more time, and if the algorithm converged (at least in a reasonnable time).
+
+% \subsection{Influence des domaines source et cible}
+\subsection{Influence of source and target domains}
+
+% \paragraph{}Peut t-on partir d’un domaine source simple (ex : “dog/truck”) pour aller vers un domaine cible plus compliqué (ex:”deer/horse”) ? 
+% Dans notre cas, nous souhaitons d'étudier le cas compliqué. Mais on peut aussi essayer d'autres cas. Notre objectif est vérifier la méthode de transboost, comme le domaine cible est assez compliqué, on n'a pas de preuve qu'il ne marche pas. Par contre, on pourra établir de modèle à partir d'un domaine source compliqué (ex:"deer/horse"),et l'appliquer sur le domaine cible (ex:"dog/truck")
+\paragraph{}Is it possible from a simple source domain \textit{(ex: dog/truck)} to go to a complicated target domain \textit{(ex: deer/horse)}. In our case we wish to study the complicated case but it would be interesting to study other cases. It would be interesting to see the influence of the different tasks on the execution. Are there "simple" and "complicated" tasks for the network?
+
+% \subsection{Influence des hyper-paramètres: recherche d'un optimum précision/coût calculatoire}
+\subsection{Influence of hyper-parameters: optimization of accuracy/computing cost}
+
+\begin{itemize}
+% \item Influence de la force des projecteurs
+\item Influence of projector power
+% \item Influence du nombre de projecteurs
+\item Influence of the number of projectors
+% \item Influence du nombre de blocs entraînés.\emph{(Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vite le seuil de précision)}
+\item Influence of the number of trainable layers \textit{(idealy we want to modify the lowest possible number in order to go faster)}
+\end{itemize}
+
+\subsection{Transboost vs. classical transfer learning}
+
+% \paragraph{}Pour un domaine cible difficile (deer/horse), on arrive sans fine-tuning à une précision de 92.6\% en moins de 10 epochs. Ce résultat peut être grandement amélioré à l'aide d'un "fine tuning" des derniers blocs convolutifs du modèle de base. 
+\paragraph{} For the "deer/horse" target task, high accuracy (92.6\%) can be reached in less than 10 epochs. This result can be improved by fine tuning the last convolution layers of the base model. So this classical transfer learning approach is very powerful.
+
+\section{Conclusion}
+
+% Si l'idée du transboost semble prometteuse dans le cadre des séries temporelles, l'application à la classification d'images avec ses problématiques inhérentes (taille de données et difficulté de classification) ne semble pas probante.
+\paragraph{}Even though TransBoost seemed promising for time series classification, application of this method to image clasification, with it's inherent problems (data size, classification difficulty), is not very compelling.
+
+% \paragraph{} Comme on le présageait l'implémentation transboost nécessite de capacité de calcul très importantes. Le fait que l'algorithme ne converge pas (sauf erreur de notre part) ou bien pas dans un temps raisonnable ne justifie pas de poursuivre les expérimentations telles que nous les avons abordées. On pourrait par exemple créer un réseau à part entière qui sert de projecteur avec entrée et en sortie des images. Cependant, là encore il faudrait parcourir tout le réseau convolutionnel de base à chaque fois pour remonter l'erreur. 
 
 \bigskip
 \nocite{*}
@@ -245,34 +500,57 @@ Dans l’idéal on veut en modifier le moins possible pour atteindre au plus vit
 
 \pagebreak
 \begin{appendices}
-  \section{Code}
-    \href{https://gitlab.com/zlanderous/transboost}{Code sur gitlab.}
 
-  \section{Schéma du programme}
+  \section{Code}
+  \paragraph{} The code is available at the following address:\\
+  \url{https://github.com/zlanderous/transboost}
+
+  \section{Overview of the program}
   \begin{figure}[h]
-    \includegraphics[width=\textwidth]{figTot.pdf}
-    \caption{schema du programme}
+    \includegraphics[width=\textwidth]{schema.png}
+    \caption{Schematic overview}
     \label{figTot}
   \end{figure}
-  \paragraph{}Descriptif des fonctions:\\
+  
+  \subsection*{functions:}
 
   \begin{description}
-    \item[Batch\_loader:] Prend les images d'un batch de CIFAR-10 et les enregistre dans un dictionnaire avec comme clé la classe de l'image.
-    \item[Sep\_saver:] Parcourt le dictionnaire et enregistre les images de chaque classe dans un dossier correspondant.
-    \item[Downloader:] Télécharge les batches de CIFAR-10 et exécute les deux fonctions précédentes pour chaque batch d'entrainement, de test et de validation.
-    \item[Create\_generator:]
-    \item[Bottom\_layer\_builder:] Charge et construit le modèle sans derniere couche (Xception dans ce cas).
-    \item[Create\_bottleneck\_features:] Calcule les valeurs de transfert pour chaque image des jeux d'entrainement, de test et de validation passant par le modèle issu de la fonction précédente.
-    \item[Top\_layer\_builder:] Construit la couche de sortie binaire.
-    \item[Top\_layer\_trainer:] Entraine la dernière couche avec les valeurs de transfert.
-    \item[Full\_model\_builder:] Assemble le modèle sans derniere couche et la dernière couche nouvellement entraînée.
-    \item[First\_modified\_layers\_model\_builder:] Gèle les poids des $n$ dernières couches pour effectuer le boosting.
-    \item[First\_modified\_layers\_model\_trainer:] Entraine le modèle partiellement gelé sur le jeu d'entrainement.
-    \item[Callback\_boosting:] est appelé à chaque epoch de l'entrainement du modèle et si la précision est supérieure à un seuil $\alpha$ arrête l'entraînement.
-    \item[Booster:] Applique l'algorithme adaboost au réseau. chaque modèle entraîne faisant office de projecteur faible est construit puis entraîne en appelant les deux fonctions précédentes $n$ fois.
-    \item[Prediction\_boosting:] Effectue un e prédiction sur la classe de l'image présentée en prenant en compte les modèles entraînés dans la fonction précédente.
-    \item[Accuracy:] Évalue la précision des prédictions.
+    % \item[Batch\_loader:] Prend les images d'un batch de CIFAR-10 et les enregistre dans un dictionnaire avec comme clé la classe de l'image.
+    \item[Batch\_loader:] Takes the images from a CIFAR-10 batch and saves them in a dictionnary object with the image class as key.
+    % \item[Sep\_saver:] Parcourt le dictionnaire et enregistre les images de chaque classe dans un dossier correspondant.
+    \item[Sep\_saver:] Goes through the dictionnary and saves images of each class in corresponding folders.
+    % \item[Downloader:] Télécharge les batches de CIFAR-10 et exécute les deux fonctions précédentes pour chaque batch d’entraînement, de test et de validation.
+    \item[Downloader:] Downloads CIFAR-1 batches and executes the 2 previous functions.
+    % \item[Create\_generator:] Crée des objets de type générateur qui contiennent des batches d'images avec du bruit.
+    \item[Create\_generator:] Creates generator objects from noised image batches.
+    % \item[Bottom\_layer\_builder:] Charge et construit le modèle sans dernière couche (Xception dans ce cas).
+    \item[Bottom\_layer\_builder:] Loads and builds model without last layer (Xception model here).
+    % \item[Create\_bottleneck\_features:] Calcule les valeurs de transfert pour chaque image des jeux d’entraînement, de test et de validation passant par le modèle issu de la fonction précédente.
+    \item[Create\_bottleneck\_features:] Computes transfer values for each image in the training, test and validation set with the model from the previous function.
+    % \item[Top\_layer\_builder:] Construit la couche de sortie binaire.
+    \item[Top\_layer\_builder:] Creates last biary output layer for base model.
+    % \item[Top\_layer\_trainer:] Entraîne la dernière couche avec les valeurs de transfert.
+    \item[Top\_layer\_trainer:] trains last layer with transfer values
+    % \item[Full\_model\_builder:] Assemble le modèle sans dernière couche et la dernière couche nouvellement entraînée.
+    \item[Full\_model\_builder:] Assembles the bottom layers of the model with the bewly trained output layer
+    % \item[first\_layers\_reinitilizer:] Gèle les poids des $n$ dernières couches pour effectuer le boosting.
+    \item[first\_layers\_reinitializer:] Freezes weights for \(n\) last layers and reinitializes weights of first layers for boosting
+    % \item[Callback\_boosting:] est appelé à chaque epoch de l’entraînement du modèle et si la précision est supérieure à un seuil $\alpha$ arrête l'entraînement et sauvegarde le modèle sur le disque dur.
+    \item[Callback\_boosting:] Called at the end of each training epoch. If accuracy is higher than a \(\alpha \) threshold, training stops and the network weights are saved to disk.
+    % \item[batchBooster:] Applique l'algorithme adaboost au réseau. chaque modèle entraîne faisant office de projecteur faible est construit puis entraîne en appelant les deux fonctions précédentes $n$ fois.
+    \item[batchBooster:] Applies the AdaBoost algorithm to the network. Each model acting as weak projector is built and trained using the 2 previous functions.
+    % \item[Prediction\_boosting:] Effectue une prédiction sur la classe de l'image présentée en prenant en compte les modèles entraînés dans la fonction précédente.
+    \item[Prediction\_boosting:] Predicts class of inputed image with trained models from boosting steps.
+    % \item[Accuracy:] Évalue la précision des prédictions.
+    \item[Accuracy:] Evaluates accuracy of prediction. 
+    % \item[small net builder:] Construit un petit CNN avec 3 couches convolutives et 3 couches entièrement connectées avec décrochement
+    \item[small net builder:] Builds small CNN with 3 convulution layers and 3 dense layers with droupout. 
+    % \item[fine\_tune\_builder:] Construit un modèle de fine tuning. Il prend les valeurs en utilisant le modèle précédent de domaine de source.
+    \item[fine\_tune\_builder:] Builds model to fine tune using base model and source domain data. 
+    % \item[fine\_tune\_trainer:] Entraîne le modèle de fine tuning.
+    \item[fine\_tune\_trainer:] trains and fine tunes model. 
   \end{description}
 \end{appendices}
 
 \end{document}
+

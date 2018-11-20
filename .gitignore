@@ -11,8 +11,8 @@ train/
 *.toc
 
 # image files
-*.png
-*.svg
+# *.png
+# *.svg
 *.jpg
 
 
